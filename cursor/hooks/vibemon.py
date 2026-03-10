@@ -127,14 +127,17 @@ def parse_json(data: str) -> dict[str, Any]:
 
 EVENT_STATE_MAP: dict[str, str] = {
     "agentSpawn": "start",
+    "sessionStart": "start",
     "promptSubmit": "thinking",
     "userPromptSubmit": "thinking",
+    "beforeSubmitPrompt": "thinking",
     "fileCreated": "working",
     "fileDeleted": "working",
     "fileEdited": "working",
     "preToolUse": "working",
     "preCompact": "packing",
     "agentStop": "done",
+    "sessionEnd": "done",
     "stop": "done",
 }
 
@@ -671,7 +674,7 @@ def main() -> None:
     payload = build_payload(state, tool_name, project_name)
     debug_log(f"Payload: {json.dumps(payload)}")
 
-    is_start = event_name == "promptSubmit"
+    is_start = event_name in ("promptSubmit", "sessionStart")
     send_to_all(payload, is_start)
 
 if __name__ == "__main__":
