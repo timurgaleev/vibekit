@@ -150,10 +150,25 @@ See [vibemon]() for the Desktop app and ESP32 firmware.
 
 ### VibeMon config (`~/.vibemon/config.json`)
 
+This file must be created manually — VibeMon will not send status updates without it.
+
+```bash
+mkdir -p ~/.vibemon
+cat > ~/.vibemon/config.json << 'EOF'
+{
+  "cache_path": "~/.vibemon/cache/statusline.json",
+  "auto_launch": true,
+  "http_urls": ["http://127.0.0.1:19280"]
+}
+EOF
+```
+
+Full config with all options:
+
 ```json
 {
   "cache_path": "~/.vibemon/cache/statusline.json",
-  "auto_launch": false,
+  "auto_launch": true,
   "http_urls": ["http://127.0.0.1:19280"],
   "serial_port": "/dev/cu.usbmodem*",
   "vibemon_url": "https://vibemon.example.com",
