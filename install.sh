@@ -160,8 +160,48 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
         CHANGED=$((CHANGED + 1))
       fi
     fi
-  done < <(find "$src_path" -type f -not -path '*/.git/*' -print0 | sort -z)
+  done < <(find "$src_path" -type f -not -path '*/.git/*' -not -name 'cli-config.json' -print0 | sort -z)
 done
+
+# Cursor cli-config.json: merge only non-personal keys (permissions, approvalMode)
+# to avoid overwriting personal data (authInfo, model, etc.)
+CURSOR_CLI_CONFIG_SRC="$REPO_DIR/cursor/cli-config.json"
+CURSOR_CLI_CONFIG_DST="${HOME}/.cursor/cli-config.json"
+if [[ -f "$CURSOR_CLI_CONFIG_SRC" ]]; then
+  if [[ ! -f "$CURSOR_CLI_CONFIG_DST" ]]; then
+    msg_add "NEW: cursor/cli-config.json"
+    if [[ "$PREVIEW_ONLY" == false ]]; then
+      deploy_file "$CURSOR_CLI_CONFIG_SRC" "$CURSOR_CLI_CONFIG_DST"
+    fi
+    ADDED=$((ADDED + 1))
+  else
+    if command -v python3 >/dev/null 2>&1; then
+      merged=$(python3 - "$CURSOR_CLI_CONFIG_SRC" "$CURSOR_CLI_CONFIG_DST" <<'PYEOF'
+import json, sys
+src = json.load(open(sys.argv[1]))
+dst = json.load(open(sys.argv[2]))
+for key in ("permissions", "approvalMode", "version"):
+    if key in src:
+        dst[key] = src[key]
+print(json.dumps(dst, indent=2))
+PYEOF
+)
+      merged_hash=$(echo "$merged" | md5 -q 2>/dev/null || echo "$merged" | md5sum | awk '{print $1}')
+      dst_hash=$(file_hash "$CURSOR_CLI_CONFIG_DST")
+      if [[ "$merged_hash" != "$dst_hash" ]]; then
+        msg_done "MERGE: cursor/cli-config.json (permissions, approvalMode)"
+        if [[ "$PREVIEW_ONLY" == false ]]; then
+          echo "$merged" > "$CURSOR_CLI_CONFIG_DST"
+        fi
+        CHANGED=$((CHANGED + 1))
+      else
+        SKIPPED=$((SKIPPED + 1))
+      fi
+    else
+      msg_warn "python3 not found — skipping cursor/cli-config.json merge"
+    fi
+  fi
+fi
 
 # Cursor settings.json requires a manual step (different path per OS)
 CURSOR_SETTINGS_SRC="$REPO_DIR/cursor/settings.json"
