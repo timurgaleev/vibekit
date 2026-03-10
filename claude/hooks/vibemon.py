@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-"""
-VibeMon Hook for Claude Code
-Desktop App + ESP32 (USB Serial / HTTP)
-Note: Model and Memory are read from statusline.py's cache file
-"""
-
 from __future__ import annotations
 
 import fcntl
@@ -22,13 +15,7 @@ from typing import Any
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
-# ============================================================================
-# Configuration Loading
-# ============================================================================
-
-
 def load_config() -> None:
-    """Load configuration from config.json and set as environment variables."""
     config_file = Path.home() / ".vibemon" / "config.json"
     if not config_file.exists():
         return
@@ -39,7 +26,6 @@ def load_config() -> None:
     except (json.JSONDecodeError, IOError):
         return
 
-    # Map config keys to environment variables
     key_mapping = {
         "debug": ("DEBUG", lambda v: "1" if v else "0"),
         "cache_path": ("VIBEMON_CACHE_PATH", str),
@@ -59,16 +45,10 @@ def load_config() -> None:
             if value:
                 os.environ.setdefault(env_key, value)
 
-
 load_config()
-
-# ============================================================================
-# Configuration
-# ============================================================================
 
 DEBUG = os.environ.get("DEBUG", "0") == "1"
 
-# Error messages
 ERR_NO_TARGET = '{"error":"No monitor target available. Set VIBEMON_HTTP_URLS or VIBEMON_SERIAL_PORT"}'
 ERR_NO_ESP32 = '{"error":"No ESP32 target available. Set VIBEMON_HTTP_URLS (with ESP32 URL) or VIBEMON_SERIAL_PORT"}'
 ERR_INVALID_MODE = (
@@ -77,25 +57,19 @@ ERR_INVALID_MODE = (
 
 VALID_LOCK_MODES = frozenset(["first-project", "on-thinking"])
 
-# Serial configuration
 SERIAL_DEBOUNCE_MS = 100
 SERIAL_LOCK_MAX_RETRIES = 10
 SERIAL_LOCK_RETRY_INTERVAL = 0.05
 SERIAL_BAUD_RATE = "115200"
 
-# HTTP configuration
 HTTP_TIMEOUT_SECONDS = 5
 
-# Desktop launch configuration
 DESKTOP_LAUNCH_WAIT_SECONDS = 3
 
-# Character configuration
 CHARACTER = "clawd"
-
 
 @dataclass(frozen=True)
 class Config:
-    """Immutable configuration container."""
 
     http_urls: tuple[str, ...]
     serial_port: str | None
@@ -104,20 +78,14 @@ class Config:
     vibemon_url: str | None
     vibemon_token: str | None
 
-
-# Cached configuration (computed once)
 _config: Config | None = None
 
-
 def parse_http_urls(urls_str: str | None) -> tuple[str, ...]:
-    """Parse comma-separated HTTP URLs."""
     if not urls_str:
         return ()
     return tuple(url.strip() for url in urls_str.split(",") if url.strip())
 
-
 def get_config() -> Config:
-    """Get configuration from environment variables (cached)."""
     global _config
     if _config is None:
         _config = Config(
@@ -132,20 +100,11 @@ def get_config() -> Config:
         )
     return _config
 
-
-# ============================================================================
-# Utility Functions
-# ============================================================================
-
-
 def debug_log(msg: str) -> None:
-    """Print debug message to stderr."""
     if DEBUG:
         print(f"[DEBUG] {msg}", file=sys.stderr)
 
-
 def resolve_serial_port(port_pattern: str | None) -> str | None:
-    """Resolve serial port pattern with wildcard support."""
     if not port_pattern:
         return None
 
@@ -159,28 +118,18 @@ def resolve_serial_port(port_pattern: str | None) -> str | None:
 
     return port_pattern
 
-
 def read_input() -> str:
-    """Read input from stdin."""
     try:
         return sys.stdin.read()
     except Exception:
         return ""
 
-
 def parse_json(data: str) -> dict[str, Any]:
-    """Parse JSON string to dictionary."""
     try:
         return json.loads(data)
     except (json.JSONDecodeError, TypeError):
         return {}
 
-
-# ============================================================================
-# State Functions
-# ============================================================================
-
-# Event to state mapping (immutable)
 EVENT_STATE_MAP: dict[str, str] = {
     "SessionStart": "start",
     "UserPromptSubmit": "thinking",
@@ -193,9 +142,7 @@ EVENT_STATE_MAP: dict[str, str] = {
     "Stop": "done",
 }
 
-
 def get_git_root(directory: str) -> str | None:
-    """Get git repository root directory."""
     if not directory:
         return None
     try:
@@ -211,10 +158,7 @@ def get_git_root(directory: str) -> str | None:
         pass
     return None
 
-
 def get_project_name(cwd: str, transcript_path: str) -> str:
-    """Extract project name from git root, cwd, or transcript path."""
-    # 1. Try git root first (handles subdirectory cases like vibemon/terraform)
     if cwd:
         git_root = get_git_root(cwd)
         if git_root:
@@ -222,25 +166,20 @@ def get_project_name(cwd: str, transcript_path: str) -> str:
             if name:
                 return name
 
-    # 2. Fallback to cwd basename
     if cwd:
         name = os.path.basename(cwd.rstrip("/"))
         if name:
             return name
 
-    # 3. Fallback to transcript path
     if transcript_path:
         name = os.path.basename(os.path.dirname(transcript_path))
         if name:
             return name
 
-    # 4. Final fallback to current working directory
     name = os.path.basename(os.getcwd().rstrip("/"))
     return name if name else "default"
 
-
 def get_state(event_name: str, permission_mode: str = "default") -> str:
-    """Map event name to state, considering permission mode."""
     state = EVENT_STATE_MAP.get(event_name, "working")
 
     if permission_mode == "plan" and state in ("thinking", "working"):
@@ -248,9 +187,7 @@ def get_state(event_name: str, permission_mode: str = "default") -> str:
 
     return state
 
-
 def get_project_metadata(project: str) -> dict[str, Any]:
-    """Get model and memory from cache for a project."""
     if not project:
         return {}
 
@@ -266,9 +203,7 @@ def get_project_metadata(project: str) -> dict[str, Any]:
     except (json.JSONDecodeError, IOError):
         return {}
 
-
 def get_terminal_id() -> str:
-    """Get terminal ID from environment."""
     iterm_session = os.environ.get("ITERM_SESSION_ID")
     if iterm_session:
         return f"iterm2:{iterm_session}"
@@ -279,9 +214,7 @@ def get_terminal_id() -> str:
 
     return ""
 
-
 def build_payload(state: str, tool: str, project: str) -> dict[str, Any]:
-    """Build payload dict for sending to monitor."""
     metadata = get_project_metadata(project)
 
     return {
@@ -294,29 +227,16 @@ def build_payload(state: str, tool: str, project: str) -> dict[str, Any]:
         "terminalId": get_terminal_id(),
     }
 
-
-# ============================================================================
-# Low-Level Send Functions
-# ============================================================================
-
-
 def _get_serial_lock_path(port: str) -> str:
-    """Get lock file path for serial port."""
     return f"/tmp/vibemon-serial-{port.replace('/', '_')}.lock"
 
-
 def _get_serial_debounce_path(port: str) -> str:
-    """Get debounce file path for serial port."""
     return f"/tmp/vibemon-serial-{port.replace('/', '_')}.debounce"
 
-
 def _get_serial_debounce_lock_path(port: str) -> str:
-    """Get debounce lock file path for serial port."""
     return f"/tmp/vibemon-serial-{port.replace('/', '_')}.dlock"
 
-
 def _acquire_lock(lock_fd: int, max_retries: int = SERIAL_LOCK_MAX_RETRIES) -> bool:
-    """Try to acquire file lock with retries."""
     for attempt in range(max_retries):
         try:
             fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -326,9 +246,7 @@ def _acquire_lock(lock_fd: int, max_retries: int = SERIAL_LOCK_MAX_RETRIES) -> b
                 time.sleep(SERIAL_LOCK_RETRY_INTERVAL)
     return False
 
-
 def send_serial_raw(port: str, data: str) -> bool:
-    """Send data via serial port with file locking (internal use)."""
     if not os.path.exists(port):
         return False
 
@@ -345,7 +263,6 @@ def send_serial_raw(port: str, data: str) -> bool:
             return False
 
         try:
-            # Configure serial port
             flag = "-f" if sys.platform == "darwin" else "-F"
             subprocess.run(
                 ["stty", flag, port, SERIAL_BAUD_RATE],
@@ -353,7 +270,6 @@ def send_serial_raw(port: str, data: str) -> bool:
                 capture_output=True,
             )
 
-            # Write data
             with open(port, "w") as f:
                 f.write(data + "\n")
                 f.flush()
@@ -373,13 +289,7 @@ def send_serial_raw(port: str, data: str) -> bool:
             except OSError:
                 pass
 
-
 def send_serial(port: str, data: str) -> bool:
-    """Send data via serial port with debouncing.
-
-    Uses a debounce file to coalesce rapid updates. Only the last update
-    within the debounce window is actually sent to the serial port.
-    """
     if not os.path.exists(port):
         return False
 
@@ -389,7 +299,6 @@ def send_serial(port: str, data: str) -> bool:
 
     lock_fd = None
     try:
-        # Write our payload to the debounce file (with lock)
         lock_fd = os.open(lock_path, os.O_CREAT | os.O_RDWR)
         fcntl.flock(lock_fd, fcntl.LOCK_EX)
         try:
@@ -400,10 +309,8 @@ def send_serial(port: str, data: str) -> bool:
             os.close(lock_fd)
             lock_fd = None
 
-        # Wait for debounce period
         time.sleep(SERIAL_DEBOUNCE_MS / 1000.0)
 
-        # Check if we're still the latest (with lock)
         lock_fd = os.open(lock_path, os.O_CREAT | os.O_RDWR)
         fcntl.flock(lock_fd, fcntl.LOCK_EX)
         try:
@@ -412,7 +319,7 @@ def send_serial(port: str, data: str) -> bool:
 
             if state["id"] != my_id:
                 debug_log("Serial debounce: skipped (newer update exists)")
-                return True  # Another process will send
+                return True
 
             debug_log("Serial debounce: sending (we have latest)")
             return send_serial_raw(port, state["data"])
@@ -431,11 +338,9 @@ def send_serial(port: str, data: str) -> bool:
             except OSError:
                 pass
 
-
 def send_http_post(
     url: str, endpoint: str, data: str | None = None
 ) -> tuple[bool, str | None]:
-    """Send HTTP POST request."""
     try:
         full_url = f"{url}{endpoint}"
         if data:
@@ -453,26 +358,16 @@ def send_http_post(
     except (URLError, TimeoutError, OSError):
         return False, None
 
-
 def send_http_get(url: str, endpoint: str) -> tuple[bool, str | None]:
-    """Send HTTP GET request."""
     try:
         with urlopen(f"{url}{endpoint}", timeout=HTTP_TIMEOUT_SECONDS) as response:
             return True, response.read().decode("utf-8")
     except (URLError, TimeoutError, OSError):
         return False, None
 
-
 def send_vibemon_api(url: str, token: str, payload: dict[str, Any]) -> bool:
-    """Send status to VibeMon API with Bearer token authentication.
-
-    API: POST /status
-    Headers: Authorization: Bearer <token>, Content-Type: application/json
-    Body: { state, project, tool, model, memory, character }
-    """
     try:
         api_url = f"{url.rstrip('/')}/status"
-        # VibeMon API doesn't need terminalId
         api_payload = json.dumps(
             {
                 "state": payload.get("state", ""),
@@ -501,25 +396,15 @@ def send_vibemon_api(url: str, token: str, payload: dict[str, Any]) -> bool:
         debug_log(f"VibeMon API error: {e}")
         return False
 
-
-# ============================================================================
-# Target Resolution
-# ============================================================================
-
-
 def _send_http_request(
     url: str, endpoint: str, data: str | None, method: str
 ) -> tuple[bool, str | None]:
-    """Send HTTP request with specified method."""
     if method == "POST":
         return send_http_post(url, endpoint, data)
     return send_http_get(url, endpoint)
 
-
 def is_localhost_url(url: str) -> bool:
-    """Check if URL is localhost (Desktop App)."""
     return "127.0.0.1" in url or "localhost" in url
-
 
 def try_http_targets(
     endpoint: str,
@@ -527,10 +412,6 @@ def try_http_targets(
     method: str = "POST",
     include_localhost: bool = True,
 ) -> tuple[bool, str | None]:
-    """Try HTTP targets in order.
-
-    Returns: (success, result_text)
-    """
     config = get_config()
 
     for url in config.http_urls:
@@ -543,12 +424,7 @@ def try_http_targets(
 
     return False, None
 
-
 def try_serial_target(command_data: str) -> tuple[bool, str | None]:
-    """Try Serial target.
-
-    Returns: (success, resolved_port)
-    """
     config = get_config()
 
     if not config.serial_port:
@@ -564,42 +440,26 @@ def try_serial_target(command_data: str) -> tuple[bool, str | None]:
 
     return False, None
 
-
 def try_all_targets(
     endpoint: str,
     http_data: str | None,
     serial_command: str,
     include_localhost: bool = True,
 ) -> tuple[bool, str | None]:
-    """Try all targets: HTTP → Serial.
-
-    Returns: (success, result_text or None)
-    """
-    # Try HTTP targets first
     success, result = try_http_targets(endpoint, http_data, "POST", include_localhost)
     if success:
         return True, result
 
-    # Try Serial
     success, _ = try_serial_target(serial_command)
     if success:
-        return True, None  # Serial doesn't return response
+        return True, None
 
     return False, None
 
-
-# ============================================================================
-# Command Functions
-# ============================================================================
-
-
 def _print_result(result: str | None, fallback: str) -> None:
-    """Print result or fallback message."""
     print(result if result else fallback)
 
-
 def send_lock(project: str) -> bool:
-    """Lock the monitor to a specific project."""
     debug_log(f"Locking project: {project}")
 
     http_data = json.dumps({"project": project})
@@ -615,9 +475,7 @@ def send_lock(project: str) -> bool:
     print(ERR_NO_TARGET)
     return False
 
-
 def send_unlock() -> bool:
-    """Unlock the monitor."""
     debug_log("Unlocking")
 
     serial_data = json.dumps({"command": "unlock"})
@@ -631,16 +489,12 @@ def send_unlock() -> bool:
     print(ERR_NO_TARGET)
     return False
 
-
 def get_status() -> bool:
-    """Get current status from monitor."""
-    # Try HTTP targets
     success, result = try_http_targets("/status", method="GET")
     if success:
         print(result)
         return True
 
-    # Try Serial (can't read response)
     serial_data = json.dumps({"command": "status"})
     success, _ = try_serial_target(serial_data)
     if success:
@@ -651,16 +505,12 @@ def get_status() -> bool:
     print(ERR_NO_TARGET)
     return False
 
-
 def get_lock_mode() -> bool:
-    """Get current lock mode from monitor."""
-    # Try HTTP targets
     success, result = try_http_targets("/lock-mode", method="GET")
     if success:
         print(result)
         return True
 
-    # Try Serial (can't read response)
     serial_data = json.dumps({"command": "lock-mode"})
     success, _ = try_serial_target(serial_data)
     if success:
@@ -671,9 +521,7 @@ def get_lock_mode() -> bool:
     print(ERR_NO_TARGET)
     return False
 
-
 def set_lock_mode(mode: str) -> bool:
-    """Set lock mode on monitor."""
     if mode not in VALID_LOCK_MODES:
         print(ERR_INVALID_MODE % mode)
         return False
@@ -693,14 +541,11 @@ def set_lock_mode(mode: str) -> bool:
     print(ERR_NO_TARGET)
     return False
 
-
 def send_reboot() -> bool:
-    """Reboot the ESP32 device."""
     debug_log("Rebooting ESP32")
 
     serial_data = json.dumps({"command": "reboot"})
 
-    # ESP32 only - don't include localhost (Desktop)
     success, result = try_all_targets(
         "/reboot", None, serial_data, include_localhost=False
     )
@@ -713,25 +558,14 @@ def send_reboot() -> bool:
     print(ERR_NO_ESP32)
     return False
 
-
-# ============================================================================
-# Send to All Targets (for status updates)
-# ============================================================================
-
-
 def is_monitor_running(url: str) -> bool:
-    """Check if monitor is running."""
     success, _ = send_http_get(url, "/health")
     return success
 
-
 def show_monitor_window(url: str) -> None:
-    """Show the monitor window."""
     send_http_post(url, "/show")
 
-
 def get_user_shell() -> str:
-    """Get user's login shell."""
     shell = os.environ.get("SHELL")
     if shell:
         return shell
@@ -745,9 +579,7 @@ def get_user_shell() -> str:
 
     return "/bin/sh"
 
-
 def launch_desktop() -> None:
-    """Launch Desktop App via npx."""
     debug_log("Launching Desktop App via npx")
     try:
         shell = get_user_shell()
@@ -762,20 +594,15 @@ def launch_desktop() -> None:
     except Exception as e:
         debug_log(f"Failed to launch Desktop App: {e}")
 
-
 def get_desktop_url(http_urls: tuple[str, ...]) -> str | None:
-    """Get first localhost URL (Desktop App) from HTTP URLs."""
     for url in http_urls:
         if is_localhost_url(url):
             return url
     return None
 
-
 def send_to_all(payload: dict[str, Any], is_start: bool = False) -> None:
-    """Send payload to all configured targets concurrently."""
     config = get_config()
 
-    # Launch Desktop App if not running (on start) - must be sequential
     desktop_url = get_desktop_url(config.http_urls)
     if desktop_url and is_start and config.auto_launch:
         if not is_monitor_running(desktop_url):
@@ -783,31 +610,25 @@ def send_to_all(payload: dict[str, Any], is_start: bool = False) -> None:
             launch_desktop()
         show_monitor_window(desktop_url)
 
-    # Convert to JSON string once for HTTP/Serial targets
     payload_str = json.dumps(payload)
 
-    # Resolve serial port once
     resolved_port: str | None = None
     if config.serial_port:
         resolved_port = resolve_serial_port(config.serial_port)
         if not resolved_port:
             debug_log(f"No serial port found for pattern: {config.serial_port}")
 
-    # Build list of tasks to run in parallel
     tasks: list[tuple[str, Any]] = []
 
     for url in config.http_urls:
-        # Capture url in closure
         u = url
         label = "Desktop App" if is_localhost_url(url) else f"HTTP ({url})"
         tasks.append((label, lambda u=u: send_http_post(u, "/status", payload_str)[0]))
 
     if resolved_port:
-        # Capture resolved_port in closure
         port = resolved_port
         tasks.append(("USB serial", lambda p=port: send_serial(p, payload_str)))
 
-    # Add VibeMon API target if configured
     if config.vibemon_url and config.vibemon_token and payload.get("project"):
         tasks.append(
             (
@@ -821,7 +642,6 @@ def send_to_all(payload: dict[str, Any], is_start: bool = False) -> None:
     if not tasks:
         return
 
-    # Execute all tasks concurrently
     with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
         future_to_name = {executor.submit(task): name for name, task in tasks}
         for future in as_completed(future_to_name):
@@ -832,12 +652,6 @@ def send_to_all(payload: dict[str, Any], is_start: bool = False) -> None:
             except Exception as e:
                 debug_log(f"{name} failed with error: {e}")
 
-
-# ============================================================================
-# Command Handlers
-# ============================================================================
-
-# Command handler mapping
 COMMAND_HANDLERS: dict[str, Any] = {
     "--lock": lambda args: send_lock(
         args[0] if args else os.path.basename(os.getcwd())
@@ -848,23 +662,13 @@ COMMAND_HANDLERS: dict[str, Any] = {
     "--reboot": lambda args: send_reboot(),
 }
 
-
 def handle_command(cmd: str, args: list[str]) -> bool | None:
-    """Handle CLI command."""
     handler = COMMAND_HANDLERS.get(cmd)
     if handler:
         return handler(args)
     return None
 
-
-# ============================================================================
-# Main
-# ============================================================================
-
-
 def main() -> None:
-    """Main entry point."""
-    # Check for command modes
     if len(sys.argv) > 1:
         cmd = sys.argv[1]
         args = sys.argv[2:]
@@ -872,11 +676,9 @@ def main() -> None:
         if result is not None:
             sys.exit(0 if result else 1)
 
-    # Read and parse input once
     input_raw = read_input()
     data = parse_json(input_raw)
 
-    # Extract fields from parsed data
     event_name = data.get("hook_event_name", "Unknown")
     tool_name = data.get("tool_name", "")
     cwd = data.get("cwd", "")
@@ -893,7 +695,6 @@ def main() -> None:
 
     is_start = event_name == "SessionStart"
     send_to_all(payload, is_start)
-
 
 if __name__ == "__main__":
     main()
