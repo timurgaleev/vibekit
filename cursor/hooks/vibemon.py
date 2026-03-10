@@ -198,12 +198,21 @@ def get_terminal_id() -> str:
 
     return ""
 
+def get_cursor_model() -> str:
+    config_path = Path.home() / ".cursor" / "cli-config.json"
+    try:
+        with open(config_path) as f:
+            config = json.load(f)
+        return config.get("model", {}).get("displayNameShort", "")
+    except (json.JSONDecodeError, IOError, KeyError):
+        return ""
+
 def build_payload(state: str, tool: str, project: str) -> dict[str, Any]:
     return {
         "state": state,
         "tool": tool,
         "project": project,
-        "model": "",
+        "model": get_cursor_model(),
         "memory": 0,
         "character": CHARACTER,
         "terminalId": get_terminal_id(),
