@@ -65,7 +65,7 @@ HTTP_TIMEOUT_SECONDS = 5
 
 DESKTOP_LAUNCH_WAIT_SECONDS = 3
 
-CHARACTER = "kiro"
+CHARACTER = "claw"
 
 @dataclass(frozen=True)
 class Config:
@@ -137,6 +137,7 @@ EVENT_STATE_MAP: dict[str, str] = {
     "preToolUse": "working",
     "preCompact": "packing",
     "agentStop": "done",
+    "subagentStop": "done",
     "sessionEnd": "done",
     "stop": "done",
 }
@@ -662,7 +663,8 @@ def main() -> None:
 
     event_name = data.get("hook_event_name", "Unknown")
     tool_name = data.get("tool_name", "")
-    cwd = data.get("cwd", "")
+    workspace_roots = data.get("workspace_roots", [])
+    cwd = workspace_roots[0] if workspace_roots else data.get("cwd", "")
     transcript_path = data.get("transcript_path", "")
     permission_mode = data.get("permission_mode", "default")
 

@@ -31,6 +31,12 @@
         "timeout": 10
       }
     ],
+    "subagentStop": [
+      {
+        "command": "python3 ~/.cursor/hooks/vibemon.py",
+        "timeout": 10
+      }
+    ],
     "sessionEnd": [
       {
         "command": "python3 ~/.cursor/hooks/vibemon.py",
