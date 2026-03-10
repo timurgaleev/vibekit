@@ -1,0 +1,30 @@
+{
+  "name": "default",
+  "description": "Default agent with VibeMon hooks",
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "python3",
+        "args": ["~/.kiro/hooks/vibemon.py", "agentSpawn"]
+      }
+    ],
+    "userPromptSubmit": [
+      {
+        "command": "python3",
+        "args": ["~/.kiro/hooks/vibemon.py", "promptSubmit"]
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "python3",
+        "args": ["~/.kiro/hooks/vibemon.py", "preToolUse"]
+      }
+    ],
+    "stop": [
+      {
+        "command": "python3",
+        "args": ["~/.kiro/hooks/vibemon.py", "agentStop"]
+      }
+    ]
+  }
+}

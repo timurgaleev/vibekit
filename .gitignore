@@ -1,0 +1,14 @@
+# Mac
+.DS_Store
+Desktop.ini
+
+# pytest
+__pycache__
+.pytest_cache
+
+# claude
+.claude/
+.context-*.md
+.context.md
+.prompt-*.md
+.prompt.md
