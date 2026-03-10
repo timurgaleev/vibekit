@@ -1,0 +1,13 @@
+---
+description: Always respond in English for all explanations, comments, and documentation.
+globs:
+alwaysApply: true
+---
+
+# Language
+
+Always respond in English.
+
+- All responses must be written in English
+- Code, commands, and technical terms stay in English
+- Commit messages and code comments stay in English

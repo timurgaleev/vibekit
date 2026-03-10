@@ -1,14 +1,12 @@
 ---
 name: context-load
-description: Load saved project context from ./context.md. 저장된 프로젝트 컨텍스트 로드.
+description: Load saved project context from ./context.md.
 allowed-tools: Read, Bash, Glob
 ---
 
 # Context Load
 
-**IMPORTANT: 모든 설명과 요약은 한국어로 작성하세요. 단, 코드 예시와 명령어는 원문 그대로 유지합니다.**
-
-저장된 프로젝트 컨텍스트를 로드하여 프로젝트를 빠르게 이해합니다.
+Load saved project context to quickly understand the project.
 
 ## Workflow
 
@@ -18,7 +16,7 @@ ls -la ./context.md 2>/dev/null
 ```
 
 If not found:
-- Inform user: "컨텍스트 파일이 없습니다. `/context-init`을 먼저 실행하세요."
+- Inform user: "No context file found. Run `/context-init` first."
 - Stop execution
 
 ### 2. Check Context Freshness
@@ -29,7 +27,7 @@ stat -f "%Sm" ./context.md 2>/dev/null || stat -c "%y" ./context.md 2>/dev/null
 
 If older than 7 days, warn user:
 ```
-⚠️ 컨텍스트가 7일 이상 지났습니다. `/context-init`으로 갱신을 권장합니다.
+Context is more than 7 days old. Consider refreshing with `/context-init`.
 ```
 
 ### 3. Load Context
@@ -43,8 +41,8 @@ git log --oneline -5 --since="$(stat -f '%Sm' -t '%Y-%m-%d' ./context.md 2>/dev/
 
 If there are commits after context was created, note:
 ```
-📝 컨텍스트 생성 이후 N개의 커밋이 있습니다.
-최근 변경사항은 반영되지 않았을 수 있습니다.
+There are N commits since this context was created.
+Recent changes may not be reflected.
 ```
 
 ### 5. Report Summary
@@ -61,7 +59,7 @@ If there are commits after context was created, note:
 - Test: `npm test`
 - Dev: `npm run dev`
 
-컨텍스트가 로드되었습니다. 프로젝트에 대해 질문하세요.
+Context loaded. Ask anything about the project.
 ```
 
 ## What Context Provides

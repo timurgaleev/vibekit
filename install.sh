@@ -6,6 +6,7 @@
 # Targets:
 #   claude/ -> ~/.claude/
 #   kiro/   -> ~/.kiro/
+#   cursor/ -> ~/.cursor/
 #
 # Usage:
 #   ./sync.sh          # Deploy all changes (default)
@@ -21,6 +22,7 @@ REPO_DIR="${HOME}/.vibekit"
 DEPLOY_TARGETS=(
   "claude:${HOME}/.claude"
   "kiro:${HOME}/.kiro"
+  "cursor:${HOME}/.cursor"
 )
 
 PREVIEW_ONLY=false
@@ -160,6 +162,28 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
     fi
   done < <(find "$src_path" -type f -not -path '*/.git/*' -print0 | sort -z)
 done
+
+# Cursor settings.json requires a manual step (different path per OS)
+CURSOR_SETTINGS_SRC="$REPO_DIR/cursor/settings.json"
+if [[ -f "$CURSOR_SETTINGS_SRC" ]]; then
+  if [[ "$(uname)" == "Darwin" ]]; then
+    CURSOR_SETTINGS_DST="$HOME/Library/Application Support/Cursor/User/settings.json"
+  else
+    CURSOR_SETTINGS_DST="$HOME/.config/Cursor/User/settings.json"
+  fi
+  if [[ ! -f "$CURSOR_SETTINGS_DST" ]]; then
+    msg_add "NOTE: Cursor settings.json not applied automatically."
+    msg_info "  To apply: cp \"$CURSOR_SETTINGS_SRC\" \"$CURSOR_SETTINGS_DST\""
+  else
+    src_hash=$(file_hash "$CURSOR_SETTINGS_SRC")
+    dst_hash=$(file_hash "$CURSOR_SETTINGS_DST")
+    if [[ "$src_hash" != "$dst_hash" ]]; then
+      msg_warn "Cursor settings.json has changes — merge manually:"
+      msg_info "  Source:      $CURSOR_SETTINGS_SRC"
+      msg_info "  Destination: $CURSOR_SETTINGS_DST"
+    fi
+  fi
+fi
 
 # Summary
 echo -e "\n${GREEN}---------------------------------------------------------------${NC}"

@@ -21,7 +21,8 @@ AI-assisted development environment settings for Claude Code and Kiro. This repo
 ```
 vibekit/
 ├── claude/  ──sync──>  ~/.claude/
-└── kiro/    ──sync──>  ~/.kiro/
+├── kiro/    ──sync──>  ~/.kiro/
+└── cursor/  ──sync──>  ~/.cursor/
 ```
 
 The `install.sh` script:

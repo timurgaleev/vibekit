@@ -1,10 +1,11 @@
 # vibekit
 
-Personal configuration for AI coding tools — Claude Code and Kiro. Keeps your settings versioned and synced across machines via a single script.
+Personal configuration for AI coding tools — Claude Code, Kiro, and Cursor. Keeps your settings versioned and synced across machines via a single script.
 
 ```
 vibekit/claude/  →  ~/.claude/
 vibekit/kiro/    →  ~/.kiro/
+vibekit/cursor/  →  ~/.cursor/
 ```
 
 ---
@@ -70,6 +71,43 @@ Shortcuts you can trigger with `/skill-name` inside Claude Code:
 /context-load      # Restore saved project context
 /resolve-coderabbit  # Apply CodeRabbit review suggestions
 ```
+
+### Cursor
+
+Cursor gets the same treatment as Claude and Kiro. Three types of config:
+
+**Rules** (`~/.cursor/rules/*.mdc`) — always-applied AI behavior:
+
+| File | What it enforces |
+|------|-----------------|
+| `language.mdc` | Always respond in English |
+| `style.mdc` | Code style and file organization |
+| `git.mdc` | Commit format and PR process |
+| `security.mdc` | Security best practices |
+| `tests.mdc` | TDD workflow, 80% coverage target |
+| `patterns.mdc` | API patterns and conventions |
+| `perf.mdc` | Incremental changes and build troubleshooting |
+
+Copy rules into any project to activate them:
+```bash
+cp -r ~/.cursor/rules .cursor/rules
+```
+
+**Context ignore** (`~/.cursor/ignore`) — files excluded from AI indexing (dependencies, build outputs, secrets, generated files).
+
+**Settings** (`cursor/settings.json`) — Cursor/VS Code editor settings. Applied manually since Cursor stores these at a different path:
+
+```bash
+# macOS
+cp cursor/settings.json ~/Library/Application\ Support/Cursor/User/settings.json
+
+# Linux
+cp cursor/settings.json ~/.config/Cursor/User/settings.json
+```
+
+`install.sh` will warn you if the file has changed and needs to be re-applied.
+
+---
 
 ### Status Line
 

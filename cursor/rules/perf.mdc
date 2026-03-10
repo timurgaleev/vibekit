@@ -1,0 +1,43 @@
+---
+description: Performance and complexity guidelines — context management, incremental changes, and build troubleshooting.
+globs:
+alwaysApply: true
+---
+
+# Performance Guidelines
+
+## Keep Changes Incremental
+
+- Make small, focused changes — one thing at a time
+- Avoid large-scale refactoring in a single step
+- Break complex tasks into phases
+- Verify after each phase before continuing
+
+## Complexity Management
+
+Avoid last 20% of context window for:
+- Large-scale refactoring spanning multiple files
+- Feature implementation across many modules
+- Debugging complex multi-file interactions
+
+Prefer for constrained context:
+- Single-file edits
+- Independent utility creation
+- Documentation updates
+- Simple bug fixes
+
+## For Complex Tasks
+
+When facing a complex multi-step task:
+1. Plan the approach before writing any code
+2. Break it into independent subtasks
+3. Complete and verify each subtask before moving on
+4. Use a structured critique pass before finalizing
+
+## Build Troubleshooting
+
+If build fails:
+1. Read the full error message before acting
+2. Fix one error at a time, starting from the top
+3. Re-run after each fix to check for cascading issues
+4. Verify the fix didn't introduce new failures

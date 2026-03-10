@@ -1,20 +1,18 @@
 ---
 name: docs-sync
-description: Analyze code and documentation, find gaps, update docs. 문서 업데이트, 코드 문서 동기화, 문서 검토.
+description: Analyze code and documentation, find gaps, update docs.
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
 # Documentation Sync
 
-**IMPORTANT: 모든 설명과 요약은 한국어로 작성하세요. 단, 코드 예시와 명령어는 원문 그대로 유지합니다.**
-
 Analyze entire codebase and documentation, find gaps, update docs.
 
 ## Philosophy
 
-- **문서는 코드의 진실을 반영해야 한다** — 코드와 다른 문서는 문서가 없는 것보다 해롭다
-- **빠진 것보다 틀린 것이 더 위험하다** — 잘못된 문서는 개발자를 잘못된 방향으로 이끈다
-- **실제 동작을 확인한다** — 코드를 읽고, 문서와 대조하고, 차이를 발견한다
+- **Docs must reflect the truth of the code** — docs that differ from code are worse than no docs
+- **Wrong is more dangerous than missing** — incorrect docs lead developers in the wrong direction
+- **Verify actual behavior** — read the code, compare to docs, find the discrepancies
 
 ## Rules
 
@@ -58,9 +56,9 @@ These are auto-generated files, not source code - do not document them.
 - Check structure and index
 - Build docs inventory
 
-### 3. Verify Accuracy — 정확성 검증
+### 3. Verify Accuracy
 
-**CRITICAL: 빠진 문서를 찾기 전에, 기존 문서가 정확한지 확인한다.**
+**CRITICAL: Before looking for missing docs, verify that existing docs are accurate.**
 
 For each documented item:
 1. **Find the corresponding code** — does the documented function/API/config actually exist?

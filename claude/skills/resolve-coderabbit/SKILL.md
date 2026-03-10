@@ -6,15 +6,13 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 
 # Resolve CodeRabbit Reviews
 
-**IMPORTANT: 모든 설명과 요약은 한국어로 작성하세요. 단, 코드 예시와 명령어는 원문 그대로 유지합니다.**
-
 Fetch CodeRabbit inline review comments from a PR, technically evaluate each one, fix valid issues, and resolve completed threads.
 
 ## Philosophy
 
-- **리뷰 제안을 맹목적으로 수용하지 않는다** — 각 제안을 코드베이스의 현실과 대조하여 기술적으로 평가한다
-- **YAGNI를 존중한다** — 현재 필요하지 않은 추상화나 복잡성을 거부할 용기를 가진다
-- **근본원인을 고친다** — 제안이 증상을 가리키면, 그 아래의 진짜 문제를 찾는다
+- **Do not blindly accept review suggestions** — evaluate each one technically against codebase reality
+- **Respect YAGNI** — have the courage to reject abstractions or complexity that aren't needed yet
+- **Fix root causes** — if a suggestion points to a symptom, find the real problem underneath
 
 ## Rules
 

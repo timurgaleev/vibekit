@@ -1,18 +1,16 @@
 ---
 name: commit
-description: Create git commit with conventional format. 커밋 생성, 변경사항 분석, 커밋 메시지 작성.
+description: Create git commit with conventional format.
 allowed-tools: Read, Bash, Grep, Glob
 ---
 
 # Create Commit
 
-**IMPORTANT: 모든 설명과 요약은 한국어로 작성하세요. 단, 코드 예시와 명령어는 원문 그대로 유지합니다.**
-
 ## Philosophy
 
-- **변경사항을 이해한 후 커밋한다** — diff를 보는 것이 아니라, 변경의 목적과 영향을 파악한다
-- **커밋 메시지는 "왜"를 담는다** — 무엇을 바꿨는지가 아니라 왜 바꿨는지를 설명한다
-- **하나의 커밋, 하나의 목적** — 관련 없는 변경은 분리한다
+- **Understand changes before committing** — grasp the purpose and impact, not just the diff
+- **Commit messages answer "why"** — explain why the change was made, not what was changed
+- **One commit, one purpose** — separate unrelated changes into distinct commits
 
 ## Workflow
 
@@ -37,9 +35,9 @@ git diff --cached
 git log --oneline -10
 ```
 
-### 2. Understand Changes — 변경사항 숙고
+### 2. Understand Changes
 
-**CRITICAL: diff를 읽는 것이 아니라, 변경의 의미를 이해한다.**
+**CRITICAL: Do not just read the diff — understand the meaning of the change.**
 
 For each changed file:
 1. **Read the changed file** — understand the full context, not just the diff

@@ -1,20 +1,18 @@
 ---
 name: validate
-description: Run lint, typecheck, and tests. Fix all issues automatically. 린트, 타입체크, 테스트 실행. 문제 자동 수정.
+description: Run lint, typecheck, and tests. Fix all issues automatically.
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
 # Validate
 
-**IMPORTANT: 모든 설명과 요약은 한국어로 작성하세요. 단, 코드 예시와 명령어는 원문 그대로 유지합니다.**
-
 Run lint, typecheck, and tests. Fix all failures. Repeat until all pass.
 
 ## Philosophy
 
-- **증상이 아니라 근본원인을 고친다** — lint 경고를 suppress하는 것이 아니라, 경고의 원인을 제거한다
-- **실패 메시지를 끝까지 읽는다** — 에러 메시지에 답이 있다
-- **연쇄 실패를 구별한다** — 하나의 근본원인이 여러 실패를 만들 수 있다
+- **Fix root causes, not symptoms** — remove the source of lint warnings, don't suppress them
+- **Read failure messages completely** — the answer is in the error message
+- **Identify cascading failures** — one root cause can produce many failures
 
 ## Rules
 

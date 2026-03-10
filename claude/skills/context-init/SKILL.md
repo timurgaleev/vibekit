@@ -1,20 +1,18 @@
 ---
 name: context-init
-description: Initialize project context by reading docs and saving to ./.context.md. 프로젝트 문서 분석 후 컨텍스트 저장.
+description: Initialize project context by reading docs and saving to ./.context.md.
 allowed-tools: Read, Write, Bash, Grep, Glob, Task
 ---
 
 # Context Initialize
 
-**IMPORTANT: 모든 설명과 요약은 한국어로 작성하세요. 단, 코드 예시와 명령어는 원문 그대로 유지합니다.**
-
-프로젝트 문서를 분석하고 컨텍스트를 `./.context.md`에 저장합니다.
+Analyze project documentation and save context to `./.context.md`.
 
 ## Philosophy
 
-- **표면이 아닌 본질을 파악한다** — 파일 목록이 아니라, 프로젝트가 어떻게 동작하는지 이해한다
-- **코드를 직접 읽고 확인한다** — README만 믿지 않고, 실제 코드와 대조한다
-- **AI가 효과적으로 작업할 수 있는 맥락을 제공한다** — 핵심 패턴, 함정, 관례를 기록한다
+- **Understand substance, not surface** — grasp how the project works, not just the file list
+- **Read and verify code directly** — don't trust only the README; cross-check against actual code
+- **Provide context for AI to work effectively** — document key patterns, gotchas, and conventions
 
 ## Workflow
 
@@ -59,10 +57,10 @@ Explore the codebase structure and identify:
 - Gotchas: non-obvious behavior, workarounds, technical debt
 ```
 
-**CRITICAL: README/docs와 실제 코드를 대조한다.**
-- README에 적힌 명령어가 실제로 동작하는가?
-- 문서화된 아키텍처가 코드와 일치하는가?
-- 불일치가 있으면 코드를 기준으로 기록하고, 불일치를 Notes에 기재한다.
+**CRITICAL: Cross-check README/docs against actual code.**
+- Do the commands in the README actually work?
+- Does the documented architecture match the code?
+- If there are discrepancies, record the code as the source of truth and note the mismatch in Notes.
 
 ### 4. Gather Information
 

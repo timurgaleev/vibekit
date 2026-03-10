@@ -1,21 +1,19 @@
 ---
 name: code-audit
-description: Deep code audit — analyze entire codebase for issues, root causes, and improvements. 전체 코드 심층 감사 — 문제점, 근본원인, 개선사항 분석.
+description: Deep code audit — analyze entire codebase for issues, root causes, and improvements.
 allowed-tools: Read, Bash, Grep, Glob, Task
 ---
 
 # Code Audit
 
-**IMPORTANT: 모든 설명과 요약은 한국어로 작성하세요. 단, 코드 예시와 명령어는 원문 그대로 유지합니다.**
-
-프로젝트의 전체 구현 코드를 심층 분석하여 문제점, 근본원인, 개선사항을 도출합니다.
+Deeply analyze the entire codebase to identify issues, root causes, and improvements.
 
 ## Philosophy
 
-- **증상이 아니라 근본원인을 찾는다** — "왜?"를 5번 반복한다
-- **심사숙고한다** — 성급한 판단을 피하고, 코드를 끝까지 읽은 후 결론을 내린다
-- **맥락을 이해한다** — 개별 파일이 아닌 시스템 전체의 흐름을 파악한다
-- **실질적 위험을 구별한다** — 이론적 문제와 실제 영향이 있는 문제를 구분한다
+- **Find root causes, not symptoms** — ask "why?" five times
+- **Think carefully** — avoid rushing to conclusions; read all the way through before deciding
+- **Understand context** — trace the full system flow, not individual files in isolation
+- **Distinguish real risks** — separate theoretical issues from those with actual impact
 
 ## Rules
 
@@ -45,9 +43,9 @@ allowed-tools: Read, Bash, Grep, Glob, Task
 
 ## Process
 
-### Phase 1: Reconnaissance — 프로젝트 전체 파악
+### Phase 1: Reconnaissance
 
-프로젝트의 전체 구조, 기술 스택, 아키텍처를 파악합니다.
+Understand the full project structure, tech stack, and architecture.
 
 ```bash
 # Project type detection
@@ -70,39 +68,39 @@ ls -d */ 2>/dev/null
 - What are the entry points?
 - What are the architectural boundaries?
 
-### Phase 2: Deep Analysis — 병렬 심층 분석
+### Phase 2: Deep Analysis — parallel execution
 
-**Team 모드를 사용하여 4개의 전문 에이전트를 병렬로 실행합니다.**
+**Run 4 specialized agents in parallel using Team mode.**
 
-#### Team 모드 사용 (권장)
+#### Team mode (recommended)
 
-`TeamCreate` 도구가 사용 가능한 경우 Team 모드로 실행합니다:
+If `TeamCreate` is available, use Team mode:
 
 ```
-1. TeamCreate로 "code-audit" 팀 생성
-2. TaskCreate로 4개 감사 태스크 생성
-3. Task 도구로 각 에이전트를 team_name="code-audit"으로 스폰
-4. 모든 에이전트가 완료될 때까지 대기 (SendMessage 알림)
-5. TeamDelete로 팀 정리
+1. Create a "code-audit" team with TeamCreate
+2. Create 4 audit tasks with TaskCreate
+3. Spawn each agent with team_name="code-audit" using the Task tool
+4. Wait for all agents to complete (via SendMessage notifications)
+5. Clean up with TeamDelete
 ```
 
-**Team 모드 스폰 예시:**
+**Team mode spawn example:**
 ```
 Task(
   subagent_type="Explore",
   team_name="code-audit",
   name="security-auditor",
-  prompt="[Security Audit 프롬프트]"
+  prompt="[Security Audit prompt]"
 )
 ```
 
-#### Fallback: Task 도구 직접 사용
+#### Fallback: direct Task tool
 
-`TeamCreate`가 없는 경우 Task 도구로 병렬 에이전트를 직접 스폰합니다.
+If `TeamCreate` is not available, spawn parallel agents directly with the Task tool.
 
 ---
 
-아래 4가지 분석을 동시에 실행합니다:
+Run the following 4 analyses concurrently:
 
 #### Agent 1: Security Audit
 ```
@@ -166,15 +164,15 @@ Analyze the testing strategy and reliability:
 Report specific untested functions/paths and their risk level.
 ```
 
-#### Team 종료
+#### Team teardown
 
-Team 모드를 사용한 경우, 모든 에이전트 완료 후 팀을 정리합니다:
+If Team mode was used, clean up after all agents complete:
 ```
-1. 각 에이전트에 SendMessage(type="shutdown_request") 전송
-2. 모든 shutdown_response 확인 후 TeamDelete 실행
+1. Send SendMessage(type="shutdown_request") to each agent
+2. Confirm all shutdown_responses, then run TeamDelete
 ```
 
-### Phase 3: Root Cause Analysis — 근본원인 추적
+### Phase 3: Root Cause Analysis
 
 After gathering findings from all agents, perform root cause analysis:
 
@@ -195,7 +193,7 @@ Finding: [Description]
 - Are there systemic issues (process, architecture, tooling)?
 - What is the relationship between findings?
 
-### Phase 4: Impact Assessment — 영향도 평가
+### Phase 4: Impact Assessment
 
 Classify each finding:
 
@@ -212,7 +210,7 @@ Classify each finding:
 3. **Reversibility** — how hard is it to fix after the fact?
 4. **Urgency** — does this need immediate attention?
 
-### Phase 5: Report — 감사 보고서 작성
+### Phase 5: Report
 
 ```markdown
 # Code Audit Report
@@ -230,10 +228,10 @@ Classify each finding:
 ### CRITICAL ({count})
 
 #### 1. {Finding Title} — {file}:{line}
-- **문제**: [What is wrong]
-- **근본원인**: [Root cause from 5 Whys analysis]
-- **영향**: [What happens if not fixed]
-- **권장 조치**: [Specific fix recommendation]
+- **Issue**: [What is wrong]
+- **Root cause**: [Root cause from 5 Whys analysis]
+- **Impact**: [What happens if not fixed]
+- **Recommendation**: [Specific fix recommendation]
 
 ### HIGH ({count})
 ...
@@ -249,9 +247,9 @@ Classify each finding:
 [Group findings by common root causes]
 
 ### Pattern 1: {Root Cause Category}
-- **영향받는 영역**: {list of affected areas}
-- **근본원인**: {systemic explanation}
-- **개선 방향**: {strategic recommendation}
+- **Affected areas**: {list of affected areas}
+- **Root cause**: {systemic explanation}
+- **Improvement direction**: {strategic recommendation}
 
 ### Pattern 2: ...
 
