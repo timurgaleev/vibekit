@@ -38,7 +38,7 @@ The `install.sh` script:
 | `CLAUDE.md` | Global instructions loaded for all projects |
 | `settings.json` | Permissions, hooks, model (opus), plugins |
 | `agents/*.md` | Specialized sub-agents (planner, builder, debugger, etc.) |
-| `hooks/vibemon.py` | VibeMon status updates |
+| `hooks/vibenotif.py` | VibeNotif status updates |
 | `rules/*.md` | Always-loaded guidelines (language, security, testing) |
 | `skills/*/SKILL.md` | User-invokable skills via `/skill-name` |
 | `statusline.py` | Custom status line showing usage, cost, context, token reset timer |
@@ -47,21 +47,21 @@ The `install.sh` script:
 
 | Event | Script | Purpose |
 |-------|--------|---------|
-| SessionStart | vibemon.py | Initialize status |
-| UserPromptSubmit | vibemon.py | Update to thinking state |
-| PreToolUse | vibemon.py | Update to working state |
-| PreCompact | vibemon.py | Update to compacting state |
-| Notification | vibemon.py | Alert user for input |
-| SubagentStart | vibemon.py | Update to working state |
-| SessionEnd | vibemon.py | Done state |
-| Stop | vibemon.py | Done state |
+| SessionStart | vibenotif.py | Initialize status |
+| UserPromptSubmit | vibenotif.py | Update to thinking state |
+| PreToolUse | vibenotif.py | Update to working state |
+| PreCompact | vibenotif.py | Update to compacting state |
+| Notification | vibenotif.py | Alert user for input |
+| SubagentStart | vibenotif.py | Update to working state |
+| SessionEnd | vibenotif.py | Done state |
+| Stop | vibenotif.py | Done state |
 
 ### Kiro Settings (`kiro/`)
 
 | Component | Purpose |
 |-----------|---------|
 | `agents/default.json` | Default agent configuration |
-| `hooks/vibemon.py` | VibeMon status updates |
+| `hooks/vibenotif.py` | VibeNotif status updates |
 
 ## Testing Changes
 

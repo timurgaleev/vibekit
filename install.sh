@@ -9,9 +9,13 @@
 #   cursor/ -> ~/.cursor/
 #
 # Usage:
-#   ./sync.sh          # Deploy all changes (default)
-#   ./sync.sh -n       # Preview mode (show changes, no writes)
-#   ./sync.sh -h       # Show help
+#   ./install.sh          # Deploy all changes (default)
+#   ./install.sh -n       # Preview mode (show changes, no writes)
+#   ./install.sh -V       # Disable VibeNotif (skip vibenotif.py and hooks)
+#   ./install.sh -h       # Show help
+#
+# Environment variables:
+#   VIBENOTIF=false ./install.sh   # Same as -V flag
 ################################################################################
 
 set -e
@@ -26,6 +30,7 @@ DEPLOY_TARGETS=(
 )
 
 PREVIEW_ONLY=false
+VIBENOTIF=${VIBENOTIF:-true}   # Set to false or use -V flag to skip VibeNotif hooks
 
 # Counters
 ADDED=0
@@ -79,17 +84,21 @@ diff_preview() {
 }
 
 # Parse arguments
-while getopts "nh" opt; do
+while getopts "nVh" opt; do
   case $opt in
     n) PREVIEW_ONLY=true ;;
+    V) VIBENOTIF=false ;;
     h)
-      echo "Usage: $0 [-n] [-h]"
+      echo "Usage: $0 [-n] [-V] [-h]"
       echo "  -n  Preview mode (no changes written)"
+      echo "  -V  Disable VibeNotif (skip vibenotif.py and hooks config)"
       echo "  -h  Show this help"
+      echo ""
+      echo "  VIBENOTIF=false $0   # Same as -V via env var"
       exit 0
       ;;
     *)
-      echo "Usage: $0 [-n] [-h]"
+      echo "Usage: $0 [-n] [-V] [-h]"
       exit 1
       ;;
   esac
@@ -101,6 +110,10 @@ echo -e "${CYAN}---------------------------------------------------------------$
 
 if [[ "$PREVIEW_ONLY" == true ]]; then
   msg_warn "Preview mode: no files will be written"
+fi
+
+if [[ "$VIBENOTIF" == false ]]; then
+  msg_warn "VibeNotif disabled: skipping vibenotif.py and hooks config"
 fi
 
 # Clone or pull repository
@@ -137,6 +150,16 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
     rel_path="${src_file#$src_path/}"
     dst_file="$dst_dir/$rel_path"
 
+    # VibeNotif: skip deploying vibenotif.py and cursor hooks.json (removal handled below)
+    if [[ "$VIBENOTIF" == false ]]; then
+      if [[ "$(basename "$src_file")" == "vibenotif.py" ]]; then
+        continue
+      fi
+      if [[ "$rel_path" == "hooks.json" ]]; then
+        continue
+      fi
+    fi
+
     if [[ ! -f "$dst_file" ]]; then
       msg_add "NEW: $rel_path"
       if [[ "$PREVIEW_ONLY" == false ]]; then
@@ -162,6 +185,48 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
     fi
   done < <(find "$src_path" -type f -not -path '*/.git/*' -not -name 'cli-config.json' -print0 | sort -z)
 done
+
+# VibeNotif: remove installed files and strip hooks from settings when disabled
+if [[ "$VIBENOTIF" == false ]]; then
+  echo -e "\n${CYAN}> Disabling VibeNotif...${NC}"
+
+  VIBENOTIF_FILES=(
+    "${HOME}/.claude/hooks/vibenotif.py"
+    "${HOME}/.cursor/hooks/vibenotif.py"
+    "${HOME}/.kiro/hooks/vibenotif.py"
+    "${HOME}/.cursor/hooks.json"
+  )
+  for f in "${VIBENOTIF_FILES[@]}"; do
+    if [[ -f "$f" ]]; then
+      msg_warn "REMOVE: $f"
+      if [[ "$PREVIEW_ONLY" == false ]]; then
+        rm -f "$f"
+      fi
+    fi
+  done
+
+  # Strip hooks section from ~/.claude/settings.json
+  CLAUDE_SETTINGS="${HOME}/.claude/settings.json"
+  if [[ -f "$CLAUDE_SETTINGS" ]] && command -v python3 >/dev/null 2>&1; then
+    stripped=$(python3 - "$CLAUDE_SETTINGS" <<'PYEOF'
+import json, sys
+data = json.load(open(sys.argv[1]))
+data.pop("hooks", None)
+print(json.dumps(data, indent=2))
+PYEOF
+)
+    stripped_hash=$(echo "$stripped" | md5 -q 2>/dev/null || echo "$stripped" | md5sum | awk '{print $1}')
+    dst_hash=$(file_hash "$CLAUDE_SETTINGS")
+    if [[ "$stripped_hash" != "$dst_hash" ]]; then
+      msg_warn "STRIP hooks: ~/.claude/settings.json"
+      if [[ "$PREVIEW_ONLY" == false ]]; then
+        echo "$stripped" > "$CLAUDE_SETTINGS"
+      fi
+    else
+      msg_info "hooks already absent: ~/.claude/settings.json"
+    fi
+  fi
+fi
 
 # Cursor cli-config.json: merge only non-personal keys (permissions, approvalMode)
 # to avoid overwriting personal data (authInfo, model, etc.)

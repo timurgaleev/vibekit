@@ -142,21 +142,21 @@ Broadcasts Claude's current state to external displays in real-time.
 | `notification` | Waiting for user input |
 | `done` | Task complete |
 
-See [vibemon]() for the Desktop app and ESP32 firmware.
+See [vibenotif]() for the Desktop app and ESP32 firmware.
 
 ---
 
 ## Configuration
 
-### VibeMon config (`~/.vibemon/config.json`)
+### VibeNotif config (`~/.vibenotif/config.json`)
 
-This file must be created manually — VibeMon will not send status updates without it.
+This file must be created manually — VibeNotif will not send status updates without it.
 
 ```bash
-mkdir -p ~/.vibemon
-cat > ~/.vibemon/config.json << 'EOF'
+mkdir -p ~/.vibenotif
+cat > ~/.vibenotif/config.json << 'EOF'
 {
-  "cache_path": "~/.vibemon/cache/statusline.json",
+  "cache_path": "~/.vibenotif/cache/statusline.json",
   "auto_launch": true,
   "http_urls": ["http://127.0.0.1:19280"]
 }
@@ -167,12 +167,12 @@ Full config with all options:
 
 ```json
 {
-  "cache_path": "~/.vibemon/cache/statusline.json",
+  "cache_path": "~/.vibenotif/cache/statusline.json",
   "auto_launch": true,
   "http_urls": ["http://127.0.0.1:19280"],
   "serial_port": "/dev/cu.usbmodem*",
-  "vibemon_url": "https://vibemon.example.com",
-  "vibemon_token": "your-token",
+  "vibenotif_url": "https://vibenotif.example.com",
+  "vibenotif_token": "your-token",
   "token_reset_hours": 5
 }
 ```
@@ -182,8 +182,8 @@ Full config with all options:
 | `auto_launch` | Auto-start Desktop App when Claude starts |
 | `http_urls` | HTTP targets to send status to (array) |
 | `serial_port` | USB serial port for ESP32 (wildcards OK) |
-| `vibemon_url` | VibeMon cloud API URL |
-| `vibemon_token` | VibeMon auth token |
+| `vibenotif_url` | VibeNotif cloud API URL |
+| `vibenotif_token` | VibeNotif auth token |
 | `token_reset_hours` | Rolling token window in hours (`0` = Enterprise, no limit) |
 
 ### Environment variables (`~/.claude/.env.local`)
@@ -191,22 +191,22 @@ Full config with all options:
 You can use env vars instead of (or alongside) the config file. Config file takes precedence.
 
 ```bash
-VIBEMON_CACHE_PATH=~/.vibemon/cache/statusline.json
-VIBEMON_AUTO_LAUNCH=0
-VIBEMON_HTTP_URLS=http://127.0.0.1:19280,http://192.168.0.185
-VIBEMON_SERIAL_PORT=/dev/cu.usbmodem*
-VIBEMON_TOKEN_RESET_HOURS=5
-# VIBEMON_URL=https://vibemon.example.com
-# VIBEMON_TOKEN=your-token
+VIBENOTIF_CACHE_PATH=~/.vibenotif/cache/statusline.json
+VIBENOTIF_AUTO_LAUNCH=0
+VIBENOTIF_HTTP_URLS=http://127.0.0.1:19280,http://192.168.0.185
+VIBENOTIF_SERIAL_PORT=/dev/cu.usbmodem*
+VIBENOTIF_TOKEN_RESET_HOURS=5
+# VIBENOTIF_URL=https://vibenotif.example.com
+# VIBENOTIF_TOKEN=your-token
 ```
 
-### VibeMon CLI
+### VibeNotif CLI
 
 ```bash
-python3 ~/.claude/hooks/vibemon.py --lock [project]   # Lock display to a project
-python3 ~/.claude/hooks/vibemon.py --unlock            # Unlock
-python3 ~/.claude/hooks/vibemon.py --status            # Show current status
-python3 ~/.claude/hooks/vibemon.py --lock-mode         # Show current lock mode
-python3 ~/.claude/hooks/vibemon.py --lock-mode first-project  # Set lock mode
-python3 ~/.claude/hooks/vibemon.py --reboot            # Reboot ESP32 device
+python3 ~/.claude/hooks/vibenotif.py --lock [project]   # Lock display to a project
+python3 ~/.claude/hooks/vibenotif.py --unlock            # Unlock
+python3 ~/.claude/hooks/vibenotif.py --status            # Show current status
+python3 ~/.claude/hooks/vibenotif.py --lock-mode         # Show current lock mode
+python3 ~/.claude/hooks/vibenotif.py --lock-mode first-project  # Set lock mode
+python3 ~/.claude/hooks/vibenotif.py --reboot            # Reboot ESP32 device
 ```

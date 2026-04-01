@@ -14,6 +14,7 @@ Test Types (ALL required):
 
 ## Testing Workflow
 
+Recommended workflow:
 1. Write tests for new functionality
 2. Run tests to verify they fail (if testing new code)
 3. Implement functionality

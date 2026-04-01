@@ -16,7 +16,7 @@ from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 def load_config() -> None:
-    config_file = Path.home() / ".vibemon" / "config.json"
+    config_file = Path.home() / ".vibenotif" / "config.json"
     if not config_file.exists():
         return
 
@@ -28,14 +28,14 @@ def load_config() -> None:
 
     key_mapping = {
         "debug": ("DEBUG", lambda v: "1" if v else "0"),
-        "auto_launch": ("VIBEMON_AUTO_LAUNCH", lambda v: "1" if v else "0"),
+        "auto_launch": ("VIBENOTIF_AUTO_LAUNCH", lambda v: "1" if v else "0"),
         "http_urls": (
-            "VIBEMON_HTTP_URLS",
+            "VIBENOTIF_HTTP_URLS",
             lambda v: ",".join(v) if isinstance(v, list) else str(v),
         ),
-        "serial_port": ("VIBEMON_SERIAL_PORT", str),
-        "vibemon_url": ("VIBEMON_URL", str),
-        "vibemon_token": ("VIBEMON_TOKEN", str),
+        "serial_port": ("VIBENOTIF_SERIAL_PORT", str),
+        "vibenotif_url": ("VIBENOTIF_URL", str),
+        "vibenotif_token": ("VIBENOTIF_TOKEN", str),
     }
 
     for config_key, (env_key, converter) in key_mapping.items():
@@ -48,8 +48,8 @@ load_config()
 
 DEBUG = os.environ.get("DEBUG", "0") == "1"
 
-ERR_NO_TARGET = '{"error":"No monitor target available. Set VIBEMON_HTTP_URLS or VIBEMON_SERIAL_PORT"}'
-ERR_NO_ESP32 = '{"error":"No ESP32 target available. Set VIBEMON_HTTP_URLS (with ESP32 URL) or VIBEMON_SERIAL_PORT"}'
+ERR_NO_TARGET = '{"error":"No monitor target available. Set VIBENOTIF_HTTP_URLS or VIBENOTIF_SERIAL_PORT"}'
+ERR_NO_ESP32 = '{"error":"No ESP32 target available. Set VIBENOTIF_HTTP_URLS (with ESP32 URL) or VIBENOTIF_SERIAL_PORT"}'
 ERR_INVALID_MODE = (
     '{"error":"Invalid mode: %s. Valid modes: first-project, on-thinking"}'
 )
@@ -73,8 +73,8 @@ class Config:
     http_urls: tuple[str, ...]
     serial_port: str | None
     auto_launch: bool
-    vibemon_url: str | None
-    vibemon_token: str | None
+    vibenotif_url: str | None
+    vibenotif_token: str | None
 
 _config: Config | None = None
 
@@ -87,11 +87,11 @@ def get_config() -> Config:
     global _config
     if _config is None:
         _config = Config(
-            http_urls=parse_http_urls(os.environ.get("VIBEMON_HTTP_URLS")),
-            serial_port=os.environ.get("VIBEMON_SERIAL_PORT"),
-            auto_launch=os.environ.get("VIBEMON_AUTO_LAUNCH", "0") == "1",
-            vibemon_url=os.environ.get("VIBEMON_URL"),
-            vibemon_token=os.environ.get("VIBEMON_TOKEN"),
+            http_urls=parse_http_urls(os.environ.get("VIBENOTIF_HTTP_URLS")),
+            serial_port=os.environ.get("VIBENOTIF_SERIAL_PORT"),
+            auto_launch=os.environ.get("VIBENOTIF_AUTO_LAUNCH", "0") == "1",
+            vibenotif_url=os.environ.get("VIBENOTIF_URL"),
+            vibenotif_token=os.environ.get("VIBENOTIF_TOKEN"),
         )
     return _config
 
@@ -219,13 +219,13 @@ def build_payload(state: str, tool: str, project: str) -> dict[str, Any]:
     }
 
 def _get_serial_lock_path(port: str) -> str:
-    return f"/tmp/vibemon-serial-{port.replace('/', '_')}.lock"
+    return f"/tmp/vibenotif-serial-{port.replace('/', '_')}.lock"
 
 def _get_serial_debounce_path(port: str) -> str:
-    return f"/tmp/vibemon-serial-{port.replace('/', '_')}.debounce"
+    return f"/tmp/vibenotif-serial-{port.replace('/', '_')}.debounce"
 
 def _get_serial_debounce_lock_path(port: str) -> str:
-    return f"/tmp/vibemon-serial-{port.replace('/', '_')}.dlock"
+    return f"/tmp/vibenotif-serial-{port.replace('/', '_')}.dlock"
 
 def _acquire_lock(lock_fd: int, max_retries: int = SERIAL_LOCK_MAX_RETRIES) -> bool:
     for attempt in range(max_retries):
@@ -356,7 +356,7 @@ def send_http_get(url: str, endpoint: str) -> tuple[bool, str | None]:
     except (URLError, TimeoutError, OSError):
         return False, None
 
-def send_vibemon_api(url: str, token: str, payload: dict[str, Any]) -> bool:
+def send_vibenotif_api(url: str, token: str, payload: dict[str, Any]) -> bool:
     try:
         api_url = f"{url.rstrip('/')}/status"
         api_payload = json.dumps(
@@ -381,10 +381,10 @@ def send_vibemon_api(url: str, token: str, payload: dict[str, Any]) -> bool:
         )
 
         with urlopen(req, timeout=HTTP_TIMEOUT_SECONDS) as response:
-            debug_log(f"VibeMon API response: {response.status}")
+            debug_log(f"VibeNotif API response: {response.status}")
             return response.status == 200
     except (URLError, TimeoutError, OSError) as e:
-        debug_log(f"VibeMon API error: {e}")
+        debug_log(f"VibeNotif API error: {e}")
         return False
 
 def _send_http_request(
@@ -620,12 +620,12 @@ def send_to_all(payload: dict[str, Any], is_start: bool = False) -> None:
         port = resolved_port
         tasks.append(("USB serial", lambda p=port: send_serial(p, payload_str)))
 
-    if config.vibemon_url and config.vibemon_token and payload.get("project"):
+    if config.vibenotif_url and config.vibenotif_token and payload.get("project"):
         tasks.append(
             (
-                "VibeMon API",
-                lambda: send_vibemon_api(
-                    config.vibemon_url, config.vibemon_token, payload
+                "VibeNotif API",
+                lambda: send_vibenotif_api(
+                    config.vibenotif_url, config.vibenotif_token, payload
                 ),
             )
         )

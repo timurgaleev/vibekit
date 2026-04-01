@@ -2,14 +2,14 @@
 
 ## Model Selection Strategy
 
-**Opus 4.5** (Deepest reasoning, PREFERRED):
+**Opus 4.6** (Deepest reasoning, PREFERRED):
 - Complex architectural decisions
 - All agent workflows (planner, architect, debugger, etc.)
 - Main development work
 - Maximum reasoning requirements
 - Research and analysis tasks
 
-**Sonnet 4.5** (Best coding model):
+**Sonnet 4.6** (Best coding model):
 - Simple code generation when Opus is not needed
 - Quick edits and modifications
 - Orchestrating workflows

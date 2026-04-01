@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 def load_config() -> None:
-    config_file = Path.home() / ".vibemon" / "config.json"
+    config_file = Path.home() / ".vibenotif" / "config.json"
     if not config_file.exists():
         return
 
@@ -22,16 +22,16 @@ def load_config() -> None:
 
     key_mapping = {
         "debug": ("DEBUG", lambda v: "1" if v else "0"),
-        "cache_path": ("VIBEMON_CACHE_PATH", str),
-        "auto_launch": ("VIBEMON_AUTO_LAUNCH", lambda v: "1" if v else "0"),
+        "cache_path": ("VIBENOTIF_CACHE_PATH", str),
+        "auto_launch": ("VIBENOTIF_AUTO_LAUNCH", lambda v: "1" if v else "0"),
         "http_urls": (
-            "VIBEMON_HTTP_URLS",
+            "VIBENOTIF_HTTP_URLS",
             lambda v: ",".join(v) if isinstance(v, list) else str(v),
         ),
-        "serial_port": ("VIBEMON_SERIAL_PORT", str),
-        "vibemon_url": ("VIBEMON_URL", str),
-        "vibemon_token": ("VIBEMON_TOKEN", str),
-        "token_reset_hours": ("VIBEMON_TOKEN_RESET_HOURS", str),
+        "serial_port": ("VIBENOTIF_SERIAL_PORT", str),
+        "vibenotif_url": ("VIBENOTIF_URL", str),
+        "vibenotif_token": ("VIBENOTIF_TOKEN", str),
+        "token_reset_hours": ("VIBENOTIF_TOKEN_RESET_HOURS", str),
     }
 
     for config_key, (env_key, converter) in key_mapping.items():
@@ -44,7 +44,7 @@ load_config()
 
 VIBE_MONITOR_MAX_PROJECTS = 10
 
-TOKEN_RESET_HOURS = int(os.environ.get("VIBEMON_TOKEN_RESET_HOURS", "5") or "5")
+TOKEN_RESET_HOURS = int(os.environ.get("VIBENOTIF_TOKEN_RESET_HOURS", "5") or "5")
 TOKEN_RESET_MS = TOKEN_RESET_HOURS * 3600 * 1000
 
 LOCK_TIMEOUT_SECONDS = 5
@@ -207,7 +207,7 @@ def get_context_usage(data: dict[str, Any]) -> str:
 
 def get_cache_path() -> str:
     cache_path = os.environ.get(
-        "VIBEMON_CACHE_PATH", "~/.vibemon/cache/statusline.json"
+        "VIBENOTIF_CACHE_PATH", "~/.vibenotif/cache/statusline.json"
     )
     return os.path.expanduser(cache_path)
 

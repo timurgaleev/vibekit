@@ -1,26 +1,38 @@
 ---
-description: Performance and complexity guidelines — context management, incremental changes, and build troubleshooting.
+description: Performance and complexity guidelines — model selection, context management, and build troubleshooting.
 globs:
 alwaysApply: true
 ---
 
-# Performance Guidelines
+# Performance Optimization
 
-## Keep Changes Incremental
+## Model Selection Strategy
 
-- Make small, focused changes — one thing at a time
-- Avoid large-scale refactoring in a single step
-- Break complex tasks into phases
-- Verify after each phase before continuing
+**Opus 4.6** (Deepest reasoning, PREFERRED):
+- Complex architectural decisions
+- All subagent workflows (task-planner, system-designer, etc.)
+- Main development work
+- Maximum reasoning requirements
+- Research and analysis tasks
 
-## Complexity Management
+**Sonnet 4.6** (Best coding model):
+- Simple code generation when Opus is not needed
+- Quick edits and modifications
+- Orchestrating workflows
+
+**Haiku 4.5** (Fast and economical):
+- Simple utility functions
+- Documentation updates
+- Quick queries
+
+## Context Window Management
 
 Avoid last 20% of context window for:
-- Large-scale refactoring spanning multiple files
-- Feature implementation across many modules
-- Debugging complex multi-file interactions
+- Large-scale refactoring
+- Feature implementation spanning multiple files
+- Debugging complex interactions
 
-Prefer for constrained context:
+Lower context sensitivity tasks:
 - Single-file edits
 - Independent utility creation
 - Documentation updates
@@ -28,16 +40,16 @@ Prefer for constrained context:
 
 ## For Complex Tasks
 
-When facing a complex multi-step task:
-1. Plan the approach before writing any code
-2. Break it into independent subtasks
-3. Complete and verify each subtask before moving on
-4. Use a structured critique pass before finalizing
+For complex tasks requiring deep reasoning:
+1. Switch to **Opus** model for maximum reasoning
+2. Plan the approach before writing any code
+3. Break into independent subtasks
+4. Use specialized subagents for isolated context and diverse analysis
 
 ## Build Troubleshooting
 
 If build fails:
-1. Read the full error message before acting
-2. Fix one error at a time, starting from the top
-3. Re-run after each fix to check for cascading issues
-4. Verify the fix didn't introduce new failures
+1. Use **build-doctor** subagent
+2. Analyze error messages
+3. Fix incrementally
+4. Verify after each fix
