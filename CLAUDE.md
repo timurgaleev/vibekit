@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AI-assisted development environment settings for Claude Code and Kiro. This repository manages configuration files that are synced to `~/.claude/` and `~/.kiro/`.
+AI-assisted development environment settings for Claude Code, Cursor CLI, and Kiro. This repository manages configuration files that are synced to `~/.claude/`, `~/.cursor/`, and `~/.kiro/`.
 
 ## Commands
 
 ```bash
 ./install.sh          # Sync all changes (default)
 ./install.sh -n       # Dry-run mode (show changes only)
+./install.sh -V       # Disable VibeNotif (skip vibenotif.py and hooks)
 ./install.sh -h       # Show help
 ```
 
