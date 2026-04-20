@@ -1,7 +1,7 @@
 ---
 name: code-audit
 description: Deep code audit — analyze entire codebase for issues, root causes, and improvements.
-allowed-tools: Read, Bash, Grep, Glob, Task
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 ---
 
 # Code Audit

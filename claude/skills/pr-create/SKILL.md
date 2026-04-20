@@ -21,18 +21,22 @@ Before creating PR, run `/validate` to ensure all checks pass:
 - Tests
 
 **If validation fails, fix all issues before proceeding.**
+**If the project has no lint/typecheck/test tooling (e.g., shell scripts, dotfiles), skip this step.**
 
 ### 1. Gather Context
 ```bash
+# Detect base branch dynamically
+BASE_BRANCH=$(gh pr view --json baseRefName -q '.baseRefName' 2>/dev/null || git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main")
+
 # Check current branch status
 git status
 
-# View commits since branching from main
-git log origin/main..HEAD --oneline
+# View commits since branching from base
+git log origin/${BASE_BRANCH}..HEAD --oneline
 
 # View full diff for PR description
-git diff origin/main...HEAD --stat
-git diff origin/main...HEAD
+git diff origin/${BASE_BRANCH}...HEAD --stat
+git diff origin/${BASE_BRANCH}...HEAD
 ```
 
 ### 2. Deep Analysis
@@ -53,20 +57,35 @@ git diff origin/main...HEAD
 - Are there any **breaking changes** for consumers?
 
 ### 3. Sync with Main (if needed)
+
+**CRITICAL: Only rebase and force push after explicit user confirmation.**
+
 ```bash
 git fetch origin
-git rebase origin/main
-# Resolve conflicts if any, then:
-git push --force-with-lease
+
+# Check if rebase is needed
+git log --oneline origin/${BASE_BRANCH}..HEAD
+git log --oneline HEAD..origin/${BASE_BRANCH}
 ```
+
+If the branch is behind `origin/${BASE_BRANCH}`:
+1. **Notify the user that a rebase is needed and ask for confirmation**
+2. If user approves, run:
+   ```bash
+   git rebase origin/${BASE_BRANCH}
+   # Resolve conflicts if any, then:
+   git push --force-with-lease
+   ```
+3. If user declines, create the PR without rebasing
 
 ### 4. Craft PR Description
 
 **Before writing, articulate:**
 1. What problem does this PR solve? (Summary)
 2. What specific changes were made and why? (Changes)
-3. How should a reviewer verify this works? (Test Plan)
-4. What risks or limitations exist? (if any)
+3. Are there any breaking changes? (Breaking Changes)
+4. How should a reviewer verify this works? (Test Plan)
+5. What risks or limitations exist? (if any)
 
 ```bash
 gh pr create --title "<type>(<scope>): <subject>" --body "$(cat <<'EOF'
@@ -76,6 +95,10 @@ gh pr create --title "<type>(<scope>): <subject>" --body "$(cat <<'EOF'
 ## Changes
 - Change 1: why this was needed
 - Change 2: why this was needed
+
+## Breaking Changes
+- (if any) Description of breaking change and migration path
+- (if none, omit this section entirely)
 
 ## Test Plan
 - [ ] How to verify changes work
@@ -93,6 +116,8 @@ gh pr view --web
 ```
 <type>(<scope>): <subject>
 ```
+
+> **Note:** PR title optionally uses scope. PRs covering multiple commits can use scope to clarify the impact area for reviewers. Commit messages use `<type>: <subject>` format without scope.
 
 **Types:**
 - `feat`: New feature

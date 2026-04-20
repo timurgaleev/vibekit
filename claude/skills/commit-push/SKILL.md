@@ -32,6 +32,8 @@ allowed-tools: Read, Bash, Grep, Glob
 <optional body explaining why>
 ```
 
+> **Note:** Commit messages do not use scope. Scope is optionally used in PR titles only.
+
 Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `ci`
 
 ### Phase 2: Pre-Push Deliberation

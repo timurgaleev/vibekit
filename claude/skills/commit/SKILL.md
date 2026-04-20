@@ -21,6 +21,7 @@ Before committing, run `/validate` to ensure all checks pass:
 - Tests
 
 **If validation fails, fix all issues before proceeding.**
+**If the project has no lint/typecheck/test tooling (e.g., shell scripts, dotfiles), skip this step.**
 
 ### 1. Gather Changes
 ```bash
@@ -101,6 +102,9 @@ git log --oneline -3
 
 <optional body>
 ```
+
+> **Note:** Commit messages do not use scope. Scope is optionally used in PR titles only.
+> A commit is an atomic unit — type and subject are sufficient to convey intent.
 
 **Types:**
 | Type | Description |
