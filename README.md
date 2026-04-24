@@ -157,18 +157,23 @@ mkdir -p ~/.vibenotif
 cat > ~/.vibenotif/config.json << 'EOF'
 {
   "cache_path": "~/.vibenotif/cache/statusline.json",
-  "auto_launch": true,
+  "auto_launch": false,
   "http_urls": ["http://127.0.0.1:19280"]
 }
 EOF
 ```
+
+The Vibe Monitor desktop app (`npx vibemon@latest`) is **disabled by default**.
+`install.sh` writes `auto_launch: false` into this config on every run; pass
+`-M` (or `VIBEMON=true`) to opt in and auto-start the Electron app with every
+Claude session.
 
 Full config with all options:
 
 ```json
 {
   "cache_path": "~/.vibenotif/cache/statusline.json",
-  "auto_launch": true,
+  "auto_launch": false,
   "http_urls": ["http://127.0.0.1:19280"],
   "serial_port": "/dev/cu.usbmodem*",
   "vibenotif_url": "https://vibenotif.example.com",
@@ -179,7 +184,7 @@ Full config with all options:
 
 | Key | Description |
 |-----|-------------|
-| `auto_launch` | Auto-start Desktop App when Claude starts |
+| `auto_launch` | Auto-start Desktop App when Claude starts (managed by `install.sh`; use `-M` to enable) |
 | `http_urls` | HTTP targets to send status to (array) |
 | `serial_port` | USB serial port for ESP32 (wildcards OK) |
 | `vibenotif_url` | VibeNotif cloud API URL |

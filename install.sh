@@ -12,10 +12,17 @@
 #   ./install.sh          # Deploy all changes (default)
 #   ./install.sh -n       # Preview mode (show changes, no writes)
 #   ./install.sh -V       # Disable VibeNotif (skip vibenotif.py and hooks)
+#   ./install.sh -M       # Enable Vibe Monitor desktop app auto-launch
 #   ./install.sh -h       # Show help
 #
 # Environment variables:
 #   VIBENOTIF=false ./install.sh   # Same as -V flag
+#   VIBEMON=true ./install.sh      # Same as -M flag
+#
+# Vibe Monitor (the Electron desktop app launched via `npx vibemon@latest`)
+# is disabled by default — the install script writes `auto_launch: false`
+# into ~/.vibenotif/config.json so it does not start with Claude sessions.
+# Pass -M (or VIBEMON=true) to opt in.
 ################################################################################
 
 set -e
@@ -31,6 +38,7 @@ DEPLOY_TARGETS=(
 
 PREVIEW_ONLY=false
 VIBENOTIF=${VIBENOTIF:-true}   # Set to false or use -V flag to skip VibeNotif hooks
+VIBEMON=${VIBEMON:-false}      # Set to true or use -M flag to enable vibemon auto-launch
 
 # Counters
 ADDED=0
@@ -84,21 +92,24 @@ diff_preview() {
 }
 
 # Parse arguments
-while getopts "nVh" opt; do
+while getopts "nVMh" opt; do
   case $opt in
     n) PREVIEW_ONLY=true ;;
     V) VIBENOTIF=false ;;
+    M) VIBEMON=true ;;
     h)
-      echo "Usage: $0 [-n] [-V] [-h]"
+      echo "Usage: $0 [-n] [-V] [-M] [-h]"
       echo "  -n  Preview mode (no changes written)"
       echo "  -V  Disable VibeNotif (skip vibenotif.py and hooks config)"
+      echo "  -M  Enable Vibe Monitor desktop app auto-launch (off by default)"
       echo "  -h  Show this help"
       echo ""
       echo "  VIBENOTIF=false $0   # Same as -V via env var"
+      echo "  VIBEMON=true $0      # Same as -M via env var"
       exit 0
       ;;
     *)
-      echo "Usage: $0 [-n] [-V] [-h]"
+      echo "Usage: $0 [-n] [-V] [-M] [-h]"
       exit 1
       ;;
   esac
@@ -114,6 +125,12 @@ fi
 
 if [[ "$VIBENOTIF" == false ]]; then
   msg_warn "VibeNotif disabled: skipping vibenotif.py and hooks config"
+fi
+
+if [[ "$VIBEMON" == true ]]; then
+  msg_info "Vibe Monitor auto-launch: enabled (-M)"
+else
+  msg_info "Vibe Monitor auto-launch: disabled (default — pass -M to enable)"
 fi
 
 # Clone or pull repository
@@ -224,6 +241,51 @@ PYEOF
       fi
     else
       msg_info "hooks already absent: ~/.claude/settings.json"
+    fi
+  fi
+fi
+
+# Vibe Monitor auto-launch: manage only the `auto_launch` key in ~/.vibenotif/config.json
+# so the Electron desktop app (`npx vibemon@latest`) does not start with every
+# Claude session unless the user explicitly opts in with -M.
+if [[ "$VIBENOTIF" == true ]] && command -v python3 >/dev/null 2>&1; then
+  VIBENOTIF_CONFIG="${HOME}/.vibenotif/config.json"
+  VIBEMON_DESIRED="$VIBEMON"
+
+  patched=$(VIBEMON_DESIRED="$VIBEMON_DESIRED" python3 - "$VIBENOTIF_CONFIG" <<'PYEOF'
+import json, os, sys
+path = sys.argv[1]
+desired = os.environ["VIBEMON_DESIRED"] == "true"
+data = {}
+if os.path.exists(path):
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            data = {}
+    except (json.JSONDecodeError, IOError):
+        data = {}
+data["auto_launch"] = desired
+print(json.dumps(data, indent=2))
+PYEOF
+)
+
+  if [[ ! -f "$VIBENOTIF_CONFIG" ]]; then
+    msg_add "NEW: ~/.vibenotif/config.json (auto_launch=${VIBEMON})"
+    if [[ "$PREVIEW_ONLY" == false ]]; then
+      mkdir -p "$(dirname "$VIBENOTIF_CONFIG")"
+      echo "$patched" > "$VIBENOTIF_CONFIG"
+    fi
+  else
+    patched_hash=$(echo "$patched" | md5 -q 2>/dev/null || echo "$patched" | md5sum | awk '{print $1}')
+    dst_hash=$(file_hash "$VIBENOTIF_CONFIG")
+    if [[ "$patched_hash" != "$dst_hash" ]]; then
+      msg_done "UPDATE: ~/.vibenotif/config.json (auto_launch=${VIBEMON})"
+      if [[ "$PREVIEW_ONLY" == false ]]; then
+        echo "$patched" > "$VIBENOTIF_CONFIG"
+      fi
+    else
+      msg_info "auto_launch already ${VIBEMON}: ~/.vibenotif/config.json"
     fi
   fi
 fi

@@ -9,9 +9,10 @@ AI-assisted development environment settings for Claude Code, Cursor CLI, and Ki
 ## Commands
 
 ```bash
-./install.sh          # Sync all changes (default)
+./install.sh          # Sync all changes (default; vibemon auto-launch OFF)
 ./install.sh -n       # Dry-run mode (show changes only)
 ./install.sh -V       # Disable VibeNotif (skip vibenotif.py and hooks)
+./install.sh -M       # Enable Vibe Monitor desktop app auto-launch
 ./install.sh -h       # Show help
 ```
 

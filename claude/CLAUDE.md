@@ -27,8 +27,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Think like a senior engineer.
 - Don't rush to conclusions; evaluate multiple approaches before deciding.
+- If multiple interpretations of the request exist, present them — don't pick silently.
 - Problem definition → small, safe change → review → refactor — repeat the loop.
 - Keep changes small, focused, and incremental.
+
+## Surgical Changes
+
+- Touch only what the task requires. Don't "improve" adjacent code, formatting, or comments.
+- Don't refactor things that aren't broken. Match existing style, even if you'd do it differently.
+- Remove imports/variables/functions that *your* changes orphaned. Don't delete pre-existing dead code — mention it instead.
+- Test: every changed line traces directly to the user's request.
 
 ## Before Changing Code
 
