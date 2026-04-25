@@ -1,0 +1,31 @@
+# Obsidian — Persistent Memory
+
+The user's knowledge base is an Obsidian vault. Its path is set via the `OBSIDIAN_VAULT` environment variable (defined in `~/.zshrc` or equivalent shell config).
+
+## Reading Context
+
+When the user references ongoing projects, decisions, or prior work, check the vault for relevant notes before answering. Use the `Read` tool with the vault path, e.g.:
+
+```
+Read $OBSIDIAN_VAULT/<note>.md
+```
+
+To explore the vault structure:
+```
+Bash: find "$OBSIDIAN_VAULT" -name "*.md" | head -30
+```
+
+## Saving Information
+
+Do NOT write directly to the vault. When work produces something worth keeping (a decision, a design, a discovery), tell the user:
+
+- What to save
+- A suggested vault path (e.g., `Projects/vibekit/decisions/auth-approach.md`)
+- The content in markdown format, ready to paste
+
+## When to Suggest Saving
+
+- Architectural or design decisions made during a session
+- Discovered constraints, gotchas, or non-obvious facts about a project
+- Completed features or milestones the user wants to track
+- When the user says "remember this" or "note that"

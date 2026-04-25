@@ -55,22 +55,7 @@ Always-loaded guidelines that shape how Claude behaves:
 | `perf.md` | Model selection strategy |
 | `security.md` | Security best practices |
 | `tests.md` | TDD workflow, 80% coverage target |
-
-### Skills
-
-Shortcuts you can trigger with `/skill-name` inside Claude Code:
-
-```bash
-/commit            # Stage and commit with conventional format
-/commit-push       # Commit and push to remote
-/pr-create         # Open a pull request with proper format
-/code-audit        # Deep audit of code quality and security
-/validate          # Run lint, typecheck, and tests
-/docs-sync         # Sync and gap-check documentation
-/context-init      # Save current project context
-/context-load      # Restore saved project context
-/resolve-coderabbit  # Apply CodeRabbit review suggestions
-```
+| `obsidian.md` | Obsidian vault memory — read context, suggest saves |
 
 ### Cursor
 
@@ -87,6 +72,7 @@ Cursor gets the same treatment as Claude and Kiro. Three types of config:
 | `tests.mdc` | TDD workflow, 80% coverage target |
 | `patterns.mdc` | API patterns and conventions |
 | `perf.mdc` | Incremental changes and build troubleshooting |
+| `obsidian.mdc` | Obsidian vault memory — read context, suggest saves |
 
 Copy rules into any project to activate them:
 ```bash
