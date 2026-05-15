@@ -163,6 +163,13 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
     mkdir -p "$dst_dir"
   fi
 
+  # claude/settings.json is merged separately below to preserve user customizations
+  # (locally-enabled plugins, additions to permissions.allow, etc.).
+  find_excludes=("-not" "-path" "*/.git/*" "-not" "-name" "cli-config.json")
+  if [[ "$src_subdir" == "claude" ]]; then
+    find_excludes+=("-not" "-name" "settings.json")
+  fi
+
   while IFS= read -r -d '' src_file; do
     rel_path="${src_file#$src_path/}"
     dst_file="$dst_dir/$rel_path"
@@ -200,8 +207,93 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
         CHANGED=$((CHANGED + 1))
       fi
     fi
-  done < <(find "$src_path" -type f -not -path '*/.git/*' -not -name 'cli-config.json' -print0 | sort -z)
+  done < <(find "$src_path" -type f "${find_excludes[@]}" -print0 | sort -z)
 done
+
+# Claude settings.json: deep merge so user customizations survive sync.
+#   - Source wins for scalar/object keys (repo authoritative for shared policy)
+#   - permissions.allow/deny/ask/additionalDirectories: array union (user additions kept)
+#   - enabledPlugins: deep merge (user-enabled plugins not in repo preserved)
+#   - Destination-only top-level keys preserved (e.g. user-set skipAutoPermissionPrompt)
+CLAUDE_SETTINGS_SRC="$REPO_DIR/claude/settings.json"
+CLAUDE_SETTINGS_DST="${HOME}/.claude/settings.json"
+if [[ -f "$CLAUDE_SETTINGS_SRC" ]]; then
+  echo -e "\n${CYAN}> Merging claude/settings.json -> $CLAUDE_SETTINGS_DST${NC}"
+  if [[ ! -f "$CLAUDE_SETTINGS_DST" ]]; then
+    msg_add "NEW: claude/settings.json"
+    if [[ "$PREVIEW_ONLY" == false ]]; then
+      deploy_file "$CLAUDE_SETTINGS_SRC" "$CLAUDE_SETTINGS_DST"
+    fi
+    ADDED=$((ADDED + 1))
+  elif command -v python3 >/dev/null 2>&1; then
+    merged=$(python3 - "$CLAUDE_SETTINGS_SRC" "$CLAUDE_SETTINGS_DST" <<'PYEOF'
+import json, sys
+
+with open(sys.argv[1]) as f:
+    src = json.load(f)
+with open(sys.argv[2]) as f:
+    dst = json.load(f)
+
+PERMISSION_ARRAY_KEYS = ("allow", "deny", "ask", "additionalDirectories")
+
+def deep_merge(s, d):
+    if not isinstance(s, dict) or not isinstance(d, dict):
+        return s
+    out = dict(d)
+    for k, v in s.items():
+        if k in d and isinstance(v, dict) and isinstance(d[k], dict):
+            out[k] = deep_merge(v, d[k])
+        else:
+            out[k] = v
+    return out
+
+def union_dedup(*arrays):
+    seen = set()
+    result = []
+    for arr in arrays:
+        if not isinstance(arr, list):
+            continue
+        for item in arr:
+            key = item if isinstance(item, (str, int, float, bool, type(None))) else repr(item)
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(item)
+    return result
+
+merged = deep_merge(src, dst)
+
+if isinstance(src.get("permissions"), dict) and isinstance(dst.get("permissions"), dict):
+    merged.setdefault("permissions", {})
+    for k in PERMISSION_ARRAY_KEYS:
+        s_list = src["permissions"].get(k)
+        d_list = dst["permissions"].get(k)
+        if isinstance(s_list, list) or isinstance(d_list, list):
+            merged["permissions"][k] = union_dedup(s_list or [], d_list or [])
+
+print(json.dumps(merged, indent=2))
+PYEOF
+)
+    merged_hash=$(echo "$merged" | md5 -q 2>/dev/null || echo "$merged" | md5sum | awk '{print $1}')
+    dst_hash=$(file_hash "$CLAUDE_SETTINGS_DST")
+    if [[ "$merged_hash" != "$dst_hash" ]]; then
+      msg_done "MERGE: claude/settings.json (preserved user customizations)"
+      if [[ "$PREVIEW_ONLY" == false ]]; then
+        echo "$merged" > "$CLAUDE_SETTINGS_DST"
+      fi
+      CHANGED=$((CHANGED + 1))
+    else
+      msg_info "no changes after merge"
+      SKIPPED=$((SKIPPED + 1))
+    fi
+  else
+    msg_warn "python3 not found — falling back to full overwrite of claude/settings.json"
+    if [[ "$PREVIEW_ONLY" == false ]]; then
+      deploy_file "$CLAUDE_SETTINGS_SRC" "$CLAUDE_SETTINGS_DST"
+    fi
+    CHANGED=$((CHANGED + 1))
+  fi
+fi
 
 # VibeNotif: remove installed files and strip hooks from settings when disabled
 if [[ "$VIBENOTIF" == false ]]; then

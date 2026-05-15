@@ -9,7 +9,11 @@
       "Bash(*)",
       "Skill(*)",
       "WebFetch",
-      "WebSearch"
+      "WebSearch",
+      "mcp__plugin_telegram_telegram__reply",
+      "mcp__plugin_telegram_telegram__react",
+      "mcp__plugin_telegram_telegram__edit_message",
+      "mcp__plugin_telegram_telegram__download_attachment"
     ],
     "deny": [
       "Bash(chmod -R 777 /:*)",
@@ -154,6 +158,7 @@
   },
   "enabledPlugins": {
     "context7@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": true
+    "superpowers@claude-plugins-official": true,
+    "telegram@claude-plugins-official": true
   }
 }
