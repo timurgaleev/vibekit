@@ -162,3 +162,36 @@ When troubleshooting issues, follow this systematic process:
 - Treating symptoms (try-catch everywhere) instead of fixing causes
 - Stopping at the first plausible explanation
 - Skipping verification after implementing a fix
+
+## Memory Configuration (configured by /setup-memory)
+- Mode: remote-http
+- Backend: memex (github.com/timurgaleev/memex)
+- MCP registered: yes (user scope; URL + bearer in ~/.claude.json, mode 0600)
+- Single source of truth: brain runs server-side; no local store to sync
+
+## Memory Search Guidance
+<!-- vibestack-memory-search-guidance:start -->
+
+memex is set up on this machine. Prefer the `mcp__memex__*` tools over Grep
+when the question is semantic or when you don't know the exact identifier yet.
+
+Available tools:
+- `mcp__memex__search` — hybrid (vector + keyword + RRF) search across all indexed pages
+- `mcp__memex__entity_recall` — pull every page that mentions a specific entity
+- `mcp__memex__entity_facts` / `entity_timeline` — structured graph queries
+- `mcp__memex__page_get` / `page_versions` / `backlinks` — direct page lookups
+- `mcp__memex__graph_neighbors` / `graph_query` — entity-graph traversal
+- `mcp__memex__stats` — index health + counts
+
+Prefer memex when:
+- "Where is X handled?" / semantic intent → `mcp__memex__search`
+- "What did I decide last time about X?" → `mcp__memex__search` + `mcp__memex__entity_timeline`
+- "Show me everything related to person/project Y" → `mcp__memex__entity_recall`
+
+Grep is still right for known exact strings, regex, multiline patterns, and
+file globs in the current repo.
+
+If queries return 401, the bearer rotated — re-fetch from your secret store
+and re-run `claude mcp add --transport http memex <URL> --header "Authorization: Bearer <new-token>"`.
+
+<!-- vibestack-memory-search-guidance:end -->
