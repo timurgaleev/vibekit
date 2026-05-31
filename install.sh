@@ -13,16 +13,24 @@
 #   ./install.sh -n       # Preview mode (show changes, no writes)
 #   ./install.sh -V       # Disable VibeNotif (skip vibenotif.py and hooks)
 #   ./install.sh -M       # Enable Vibe Monitor desktop app auto-launch
+#   ./install.sh -C       # Install the Caveman token-compression skill
 #   ./install.sh -h       # Show help
 #
 # Environment variables:
 #   VIBENOTIF=false ./install.sh   # Same as -V flag
 #   VIBEMON=true ./install.sh      # Same as -M flag
+#   CAVEMAN=true ./install.sh      # Same as -C flag
+#   CAVEMAN_INSTALL_URL=<url> ./install.sh   # Override Caveman installer source
 #
 # Vibe Monitor (the Electron desktop app launched via `npx vibemon@latest`)
 # is disabled by default — the install script writes `auto_launch: false`
 # into ~/.vibenotif/config.json so it does not start with Claude sessions.
 # Pass -M (or VIBEMON=true) to opt in.
+#
+# Caveman (https://github.com/JuliusBrussee/caveman) is an optional Claude Code
+# skill that compresses agent output. It is disabled by default and self-updates
+# via its own installer; pass -C (or CAVEMAN=true) to run that installer. It
+# requires Node >= 18 and auto-detects which agents to install into.
 ################################################################################
 
 set -e
@@ -39,6 +47,8 @@ DEPLOY_TARGETS=(
 PREVIEW_ONLY=false
 VIBENOTIF=${VIBENOTIF:-true}   # Set to false or use -V flag to skip VibeNotif hooks
 VIBEMON=${VIBEMON:-false}      # Set to true or use -M flag to enable vibemon auto-launch
+CAVEMAN=${CAVEMAN:-false}      # Set to true or use -C flag to install the Caveman skill
+CAVEMAN_INSTALL_URL=${CAVEMAN_INSTALL_URL:-https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh}
 
 # Counters
 ADDED=0
@@ -92,24 +102,27 @@ diff_preview() {
 }
 
 # Parse arguments
-while getopts "nVMh" opt; do
+while getopts "nVMCh" opt; do
   case $opt in
     n) PREVIEW_ONLY=true ;;
     V) VIBENOTIF=false ;;
     M) VIBEMON=true ;;
+    C) CAVEMAN=true ;;
     h)
-      echo "Usage: $0 [-n] [-V] [-M] [-h]"
+      echo "Usage: $0 [-n] [-V] [-M] [-C] [-h]"
       echo "  -n  Preview mode (no changes written)"
       echo "  -V  Disable VibeNotif (skip vibenotif.py and hooks config)"
       echo "  -M  Enable Vibe Monitor desktop app auto-launch (off by default)"
+      echo "  -C  Install the Caveman token-compression skill (off by default)"
       echo "  -h  Show this help"
       echo ""
       echo "  VIBENOTIF=false $0   # Same as -V via env var"
       echo "  VIBEMON=true $0      # Same as -M via env var"
+      echo "  CAVEMAN=true $0      # Same as -C via env var"
       exit 0
       ;;
     *)
-      echo "Usage: $0 [-n] [-V] [-M] [-h]"
+      echo "Usage: $0 [-n] [-V] [-M] [-C] [-h]"
       exit 1
       ;;
   esac
@@ -131,6 +144,12 @@ if [[ "$VIBEMON" == true ]]; then
   msg_info "Vibe Monitor auto-launch: enabled (-M)"
 else
   msg_info "Vibe Monitor auto-launch: disabled (default — pass -M to enable)"
+fi
+
+if [[ "$CAVEMAN" == true ]]; then
+  msg_info "Caveman skill: will install (-C)"
+else
+  msg_info "Caveman skill: skipped (default — pass -C to install)"
 fi
 
 # Clone or pull repository
@@ -440,6 +459,36 @@ if [[ -f "$CURSOR_SETTINGS_SRC" ]]; then
       msg_warn "Cursor settings.json has changes — merge manually:"
       msg_info "  Source:      $CURSOR_SETTINGS_SRC"
       msg_info "  Destination: $CURSOR_SETTINGS_DST"
+    fi
+  fi
+fi
+
+# Caveman skill: opt-in install via its official installer (self-updating).
+# Off by default; enabled with -C or CAVEMAN=true. Requires Node >= 18 — if it
+# is missing we warn and skip rather than aborting the whole sync.
+if [[ "$CAVEMAN" == true ]]; then
+  echo -e "\n${CYAN}> Installing Caveman skill...${NC}"
+
+  node_major=""
+  if command -v node >/dev/null 2>&1; then
+    node_major=$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo "")
+  fi
+
+  if [[ -z "$node_major" ]]; then
+    msg_warn "Node not found — skipping Caveman (needs Node >= 18)"
+    msg_info "Install Node, then re-run: $0 -C"
+  elif [[ "$node_major" -lt 18 ]]; then
+    msg_warn "Node $(node -v 2>/dev/null) is too old — skipping Caveman (needs Node >= 18)"
+    msg_info "Upgrade Node, then re-run: $0 -C"
+  elif [[ "$PREVIEW_ONLY" == true ]]; then
+    msg_warn "Preview mode: would run Caveman installer:"
+    msg_info "  curl -fsSL \"$CAVEMAN_INSTALL_URL\" | bash"
+  else
+    msg_info "Running Caveman installer: $CAVEMAN_INSTALL_URL"
+    if curl -fsSL "$CAVEMAN_INSTALL_URL" | bash; then
+      msg_done "Caveman installed"
+    else
+      msg_warn "Caveman installer failed — skipping (sync continues)"
     fi
   fi
 fi
