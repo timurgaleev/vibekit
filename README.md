@@ -21,6 +21,9 @@ bash -c "$(curl -fsSL timurgaleev.github.io/vibekit/install.sh)"
 
 # Preview changes without writing anything
 ./install.sh -n
+
+# Also install the optional Caveman skill (see below)
+./install.sh -C
 ```
 
 ---
@@ -129,6 +132,30 @@ Broadcasts Claude's current state to external displays in real-time.
 | `done` | Task complete |
 
 See [vibenotif]() for the Desktop app and ESP32 firmware.
+
+---
+
+## Optional tools
+
+### Caveman
+
+[Caveman](https://github.com/JuliusBrussee/caveman) is a Claude Code skill that
+compresses agent output (`/caveman`, `/caveman-commit`, `/caveman-review`, …).
+It is **opt-in** and **not vendored** into vibekit — instead, `install.sh -C`
+runs Caveman's own installer, so it always self-updates from upstream.
+
+```bash
+./install.sh -C            # or: CAVEMAN=true ./install.sh
+```
+
+Notes:
+- Requires **Node >= 18** (the installer delegates to `npx`). If Node is
+  missing, the step warns and skips without aborting the rest of the sync.
+- Caveman auto-detects your installed agents (Claude, Cursor, …) and installs
+  into each.
+- `-C` runs `curl -fsSL .../caveman/main/install.sh | bash`. Override the source
+  with `CAVEMAN_INSTALL_URL=<url>` if you want to pin or mirror it.
+- In preview mode (`-n -C`) it prints the installer command without running it.
 
 ---
 

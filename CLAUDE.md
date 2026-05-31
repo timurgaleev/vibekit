@@ -13,8 +13,14 @@ AI-assisted development environment settings for Claude Code, Cursor CLI, and Ki
 ./install.sh -n       # Dry-run mode (show changes only)
 ./install.sh -V       # Disable VibeNotif (skip vibenotif.py and hooks)
 ./install.sh -M       # Enable Vibe Monitor desktop app auto-launch
+./install.sh -C       # Install the Caveman token-compression skill (opt-in)
 ./install.sh -h       # Show help
 ```
+
+Caveman (`-C` / `CAVEMAN=true`) is opt-in and runs the upstream installer
+(`JuliusBrussee/caveman`) via `curl | bash`, which self-updates from `main` and
+needs Node >= 18. vibekit does not vendor its files; if Node is missing the step
+warns and skips without aborting the sync.
 
 ## Architecture
 
