@@ -12,3 +12,7 @@ __pycache__
 .context.md
 .prompt-*.md
 .prompt.md
+
+# Caveman upstream installer artifacts (written into cwd by ./install.sh -C)
+skills-lock.json
+.agents/
