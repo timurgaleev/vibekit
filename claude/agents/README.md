@@ -3,7 +3,7 @@
 This directory holds the sub-agent definitions deployed to `~/.claude/agents/` by `install.sh`.
 
 - **Total agents:** 33
-- **Model:** all agents use `opus` (Claude Opus 4.7) for deepest reasoning
+- **Model:** all agents use `opus` (Claude Opus 4.8) for deepest reasoning
 - **Tool scoping:** writers/reviewers get `Read, Grep, Glob`; builders also get `Edit, Write, Bash`
 
 ## Original agents
