@@ -13,12 +13,14 @@
 #   ./install.sh -n       # Preview mode (show changes, no writes)
 #   ./install.sh -V       # Disable VibeNotif (skip vibenotif.py and hooks)
 #   ./install.sh -M       # Enable Vibe Monitor desktop app auto-launch
+#   ./install.sh -P       # Purge Vibe Monitor (kill process, remove cache + data)
 #   ./install.sh -C       # Install the Caveman token-compression skill
 #   ./install.sh -h       # Show help
 #
 # Environment variables:
 #   VIBENOTIF=false ./install.sh   # Same as -V flag
 #   VIBEMON=true ./install.sh      # Same as -M flag
+#   VIBEMON_PURGE=true ./install.sh # Same as -P flag
 #   CAVEMAN=true ./install.sh      # Same as -C flag
 #   CAVEMAN_INSTALL_URL=<url> ./install.sh   # Override Caveman installer source
 #
@@ -26,6 +28,12 @@
 # is disabled by default — the install script writes `auto_launch: false`
 # into ~/.vibenotif/config.json so it does not start with Claude sessions.
 # Pass -M (or VIBEMON=true) to opt in.
+#
+# Disabling only flips the config flag; it leaves a previously launched app
+# running plus its npx cache (~/.npm/_npx/*/node_modules/vibemon) and app data
+# (~/Library/Application Support/vibemon on macOS, ~/.config/vibemon on Linux).
+# Pass -P (or VIBEMON_PURGE=true) to actively kill the process and delete those
+# artifacts. -P implies disabled and honors -n (preview shows what would go).
 #
 # Caveman (https://github.com/JuliusBrussee/caveman) is an optional Claude Code
 # skill that compresses agent output. It is disabled by default and self-updates
@@ -47,6 +55,7 @@ DEPLOY_TARGETS=(
 PREVIEW_ONLY=false
 VIBENOTIF=${VIBENOTIF:-true}   # Set to false or use -V flag to skip VibeNotif hooks
 VIBEMON=${VIBEMON:-false}      # Set to true or use -M flag to enable vibemon auto-launch
+VIBEMON_PURGE=${VIBEMON_PURGE:-false}  # Set to true or use -P flag to remove vibemon entirely
 CAVEMAN=${CAVEMAN:-false}      # Set to true or use -C flag to install the Caveman skill
 CAVEMAN_INSTALL_URL=${CAVEMAN_INSTALL_URL:-https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh}
 
@@ -101,32 +110,46 @@ diff_preview() {
   fi
 }
 
+# Vibe Monitor lifecycle helpers (purge_vibemon) live in a sourceable lib so the
+# behavior can be unit-tested without running this deploy script. Sourced after
+# msg_* are defined above, so the lib reuses these colored helpers.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/vibemon.sh"
+
 # Parse arguments
-while getopts "nVMCh" opt; do
+while getopts "nVMPCh" opt; do
   case $opt in
     n) PREVIEW_ONLY=true ;;
     V) VIBENOTIF=false ;;
     M) VIBEMON=true ;;
+    P) VIBEMON_PURGE=true ;;
     C) CAVEMAN=true ;;
     h)
-      echo "Usage: $0 [-n] [-V] [-M] [-C] [-h]"
+      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-h]"
       echo "  -n  Preview mode (no changes written)"
       echo "  -V  Disable VibeNotif (skip vibenotif.py and hooks config)"
       echo "  -M  Enable Vibe Monitor desktop app auto-launch (off by default)"
+      echo "  -P  Purge Vibe Monitor (kill process, delete npx cache + app data)"
       echo "  -C  Install the Caveman token-compression skill (off by default)"
       echo "  -h  Show this help"
       echo ""
-      echo "  VIBENOTIF=false $0   # Same as -V via env var"
-      echo "  VIBEMON=true $0      # Same as -M via env var"
-      echo "  CAVEMAN=true $0      # Same as -C via env var"
+      echo "  VIBENOTIF=false $0    # Same as -V via env var"
+      echo "  VIBEMON=true $0       # Same as -M via env var"
+      echo "  VIBEMON_PURGE=true $0 # Same as -P via env var"
+      echo "  CAVEMAN=true $0       # Same as -C via env var"
       exit 0
       ;;
     *)
-      echo "Usage: $0 [-n] [-V] [-M] [-C] [-h]"
+      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-h]"
       exit 1
       ;;
   esac
 done
+
+# -P implies disabled: purge takes precedence over -M, and forces auto_launch off.
+if [[ "$VIBEMON_PURGE" == true ]]; then
+  VIBEMON=false
+fi
 
 echo -e "\n${CYAN}---------------------------------------------------------------${NC}"
 echo -e "${CYAN}                     AI-CONFIG DEPLOY                         ${NC}"
@@ -140,10 +163,12 @@ if [[ "$VIBENOTIF" == false ]]; then
   msg_warn "VibeNotif disabled: skipping vibenotif.py and hooks config"
 fi
 
-if [[ "$VIBEMON" == true ]]; then
+if [[ "$VIBEMON_PURGE" == true ]]; then
+  msg_warn "Vibe Monitor: purge requested (-P) — process, cache, and data will be removed"
+elif [[ "$VIBEMON" == true ]]; then
   msg_info "Vibe Monitor auto-launch: enabled (-M)"
 else
-  msg_info "Vibe Monitor auto-launch: disabled (default — pass -M to enable)"
+  msg_info "Vibe Monitor auto-launch: disabled (default — pass -M to enable, -P to purge)"
 fi
 
 if [[ "$CAVEMAN" == true ]]; then
@@ -399,6 +424,13 @@ PYEOF
       msg_info "auto_launch already ${VIBEMON}: ~/.vibenotif/config.json"
     fi
   fi
+fi
+
+# Vibe Monitor purge: remove the process and on-disk artifacts a prior launch
+# left behind (runs after auto_launch is set false above). Independent of
+# VIBENOTIF so it works even with -V.
+if [[ "$VIBEMON_PURGE" == true ]]; then
+  purge_vibemon
 fi
 
 # Cursor cli-config.json: merge only non-personal keys (permissions, approvalMode)
