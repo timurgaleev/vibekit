@@ -113,11 +113,6 @@ diff_preview() {
   fi
 }
 
-# Vibe Monitor lifecycle helpers (purge_vibemon) live in a sourceable lib so the
-# behavior can be unit-tested without running this deploy script. Sourced after
-# msg_* are defined above, so the lib reuses these colored helpers.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/lib/vibemon.sh"
 
 # Parse arguments
 while getopts "nVMPCh" opt; do
@@ -191,6 +186,17 @@ else
   msg_info "Updating: $REPO_DIR"
   git -C "$REPO_DIR" pull
   msg_done "Up to date"
+fi
+
+# Vibe Monitor lifecycle helpers (purge_vibemon) live in a sourceable lib. Source
+# it from the repo we just cloned/pulled, not from this script's own directory:
+# the curl | bash one-liner has no local lib/, and ${BASH_SOURCE[0]} is empty in
+# that path. Sourcing from $REPO_DIR works for both the one-liner and a clone.
+# msg_* are already defined above, so the lib reuses these colored helpers.
+if [[ -f "$REPO_DIR/lib/vibemon.sh" ]]; then
+  source "$REPO_DIR/lib/vibemon.sh"
+else
+  msg_warn "lib/vibemon.sh missing in $REPO_DIR — Vibe Monitor purge (-P) unavailable"
 fi
 
 # Deploy each target
@@ -433,7 +439,11 @@ fi
 # left behind (runs after auto_launch is set false above). Independent of
 # VIBENOTIF so it works even with -V.
 if [[ "$VIBEMON_PURGE" == true ]]; then
-  purge_vibemon
+  if declare -F purge_vibemon >/dev/null 2>&1; then
+    purge_vibemon
+  else
+    msg_warn "Purge requested but lib/vibemon.sh was not loaded — skipping"
+  fi
 fi
 
 # Cursor cli-config.json: merge only non-personal keys (permissions, approvalMode)
