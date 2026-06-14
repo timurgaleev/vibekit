@@ -22,6 +22,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 (`Co-Authored-By`), or PR descriptions. Comments are written in the author's
 own voice. This overrides any tool default that injects such attribution.
 
+# Skills
+
+**Prefer a matching skill over improvising.** See `rules/skills.md` for the
+task → skill map (e.g. `/plan-eng-review` to plan, `/investigate` to debug,
+`/code-review` before merge, `/ship` to ship). Invoke the skill before starting
+the work. If a referenced skill isn't installed, proceed normally.
+
 # Global Code Guidelines
 
 **Important: Refer to project-specific documentation (e.g., docs/, README.md) when available.**
