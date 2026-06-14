@@ -2,19 +2,22 @@
 
 ## Model Selection Strategy
 
-**Opus 4.6** (Deepest reasoning, PREFERRED):
+Refer to model tiers, not pinned versions, so this guidance stays current as new
+releases ship. Always prefer the latest model in each tier.
+
+**Latest Opus tier** (Deepest reasoning, PREFERRED):
 - Complex architectural decisions
 - All agent workflows (planner, architect, debugger, etc.)
 - Main development work
 - Maximum reasoning requirements
 - Research and analysis tasks
 
-**Sonnet 4.6** (Best coding model):
+**Latest Sonnet tier** (Best balance for coding):
 - Simple code generation when Opus is not needed
 - Quick edits and modifications
 - Orchestrating workflows
 
-**Haiku 4.5** (Fast and economical):
+**Latest Haiku tier** (Fast and economical):
 - Simple utility functions
 - Documentation updates
 - Quick queries
