@@ -5,6 +5,17 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-06-14
+
+### Added
+- `skills` routing rule (`claude/rules/skills.md`, `cursor/rules/skills.mdc`,
+  pointer in `claude/CLAUDE.md`): maps each task to the matching
+  [vibestack](https://github.com/timurgaleev/vibestack) slash-command workflow
+  (`/plan-eng-review` to plan, `/investigate` to debug, `/code-review` before
+  merge, `/ship` to ship, and more), so the assistant reaches for the right
+  skill instead of improvising. Skills are treated as optional — if one isn't
+  installed, work proceeds normally.
+
 ## [1.2.0] - 2026-06-14
 
 ### Added
@@ -94,6 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VibeNotif / VibeMon status broadcasting.
 - Custom statusline.
 
+[1.3.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.3.0
 [1.2.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.2.0
 [1.1.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.1.0
 [1.0.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.0.0
