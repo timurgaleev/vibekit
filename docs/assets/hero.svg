@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="880" height="300" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="vibekit keeps one configuration source in sync across every AI coding tool — Claude Code, Cursor, and Kiro — with a single install command.">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B0F17"/>
+      <stop offset="1" stop-color="#121A2A"/>
+    </linearGradient>
+    <linearGradient id="wire" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#E6EDF3"/>
+      <stop offset="1" stop-color="#58A6FF"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="880" height="300" rx="18" fill="url(#bg)"/>
+
+  <!-- wordmark + tagline -->
+  <text x="40" y="50" fill="#E6EDF3" font-size="26" font-weight="700">vibekit</text>
+  <text x="146" y="50" fill="#7D8590" font-size="14" font-weight="500">/ one config, every AI tool, always in sync</text>
+
+  <!-- source node -->
+  <g>
+    <rect x="40" y="118" width="170" height="104" rx="14" fill="#0E1626" stroke="#E6EDF3" stroke-width="1.5"/>
+    <text x="125" y="150" text-anchor="middle" fill="#E6EDF3" font-size="16" font-weight="700">vibekit</text>
+    <text x="125" y="174" text-anchor="middle" fill="#7D8590" font-size="12.5">your config, versioned</text>
+    <text x="125" y="200" text-anchor="middle" fill="#58A6FF" font-size="12.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">./install.sh</text>
+  </g>
+
+  <!-- branching wires (base + animated overlay) -->
+  <g fill="none" stroke="#243049" stroke-width="3" stroke-linecap="round">
+    <path d="M210,170 C360,170 470,79 620,79"/>
+    <path d="M210,170 C360,170 470,170 620,170"/>
+    <path d="M210,170 C360,170 470,261 620,261"/>
+  </g>
+  <g fill="none" stroke="url(#wire)" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 600">
+    <path d="M210,170 C360,170 470,79 620,79"><animate attributeName="stroke-dashoffset" from="614" to="0" dur="4s" repeatCount="indefinite"/></path>
+    <path d="M210,170 C360,170 470,170 620,170"><animate attributeName="stroke-dashoffset" from="614" to="0" dur="4s" begin="1.33s" repeatCount="indefinite"/></path>
+    <path d="M210,170 C360,170 470,261 620,261"><animate attributeName="stroke-dashoffset" from="614" to="0" dur="4s" begin="2.66s" repeatCount="indefinite"/></path>
+  </g>
+
+  <!-- traveling pulses -->
+  <circle r="6" fill="#fff" filter="url(#glow)"><animateMotion path="M210,170 C360,170 470,79 620,79" dur="4s" repeatCount="indefinite"/></circle>
+  <circle r="6" fill="#fff" filter="url(#glow)"><animateMotion path="M210,170 C360,170 470,170 620,170" dur="4s" begin="1.33s" repeatCount="indefinite"/></circle>
+  <circle r="6" fill="#fff" filter="url(#glow)"><animateMotion path="M210,170 C360,170 470,261 620,261" dur="4s" begin="2.66s" repeatCount="indefinite"/></circle>
+
+  <!-- target cards -->
+  <g>
+    <rect x="620" y="50" width="220" height="58" rx="12" fill="#0E1626" stroke="#3FB950" stroke-width="1.5" opacity="0.5">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="4s" keyTimes="0;0.33;0.55" repeatCount="indefinite"/>
+    </rect>
+    <text x="640" y="78" fill="#3FB950" font-size="14" font-weight="700">Claude Code</text>
+    <text x="640" y="97" fill="#7D8590" font-size="12" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">~/.claude</text>
+  </g>
+  <g>
+    <rect x="620" y="141" width="220" height="58" rx="12" fill="#0E1626" stroke="#58A6FF" stroke-width="1.5" opacity="0.5">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="4s" begin="1.33s" keyTimes="0;0.33;0.55" repeatCount="indefinite"/>
+    </rect>
+    <text x="640" y="169" fill="#58A6FF" font-size="14" font-weight="700">Cursor</text>
+    <text x="640" y="188" fill="#7D8590" font-size="12" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">~/.cursor</text>
+  </g>
+  <g>
+    <rect x="620" y="232" width="220" height="58" rx="12" fill="#0E1626" stroke="#BC8CFF" stroke-width="1.5" opacity="0.5">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="4s" begin="2.66s" keyTimes="0;0.33;0.55" repeatCount="indefinite"/>
+    </rect>
+    <text x="640" y="260" fill="#BC8CFF" font-size="14" font-weight="700">Kiro</text>
+    <text x="640" y="279" fill="#7D8590" font-size="12" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">~/.kiro</text>
+  </g>
+</svg>
