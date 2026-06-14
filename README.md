@@ -60,6 +60,7 @@ Always-loaded guidelines that shape how Claude behaves:
 | `tests.md` | TDD workflow, 80% coverage target |
 | `obsidian.md` | Obsidian vault memory — read context, suggest saves |
 | `authorship.md` | No AI attribution; comments, commits, and PRs in your voice |
+| `skills.md` | Routes each task to the matching [vibestack](https://github.com/timurgaleev/vibestack) skill (`/ship`, `/plan-eng-review`, …) |
 
 ### Cursor
 
@@ -78,6 +79,7 @@ Cursor gets the same treatment as Claude and Kiro. Three types of config:
 | `perf.mdc` | Incremental changes and build troubleshooting |
 | `obsidian.mdc` | Obsidian vault memory — read context, suggest saves |
 | `authorship.mdc` | No AI attribution; comments, commits, and PRs in your voice |
+| `skills.mdc` | Routes each task to the matching [vibestack](https://github.com/timurgaleev/vibestack) skill (`/ship`, `/plan-eng-review`, …) |
 
 Copy rules into any project to activate them:
 ```bash

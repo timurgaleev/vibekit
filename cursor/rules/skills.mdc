@@ -1,0 +1,47 @@
+---
+description: Skill routing — map a task to the vibestack slash-command workflow that fits, and prefer it over improvising.
+globs:
+alwaysApply: true
+---
+
+# Skill Routing
+
+These are [vibestack](https://github.com/timurgaleev/vibestack) skills — slash
+commands that carry a full workflow. When a task matches one, prefer the skill
+over improvising: invoke it before starting the work.
+
+**Availability:** If a skill below is installed, use it. If it isn't present on
+this machine, proceed normally — these are suggestions, not hard dependencies.
+
+**Ordering:** Process skills come first. Brainstorm or plan before implementing;
+investigate before fixing. Then run the implementation and review skills.
+
+## Task → skill
+
+| When the task is… | Use |
+|-------------------|-----|
+| Plan a feature, refactor, or architecture change | `/plan-eng-review`, `/autoplan` |
+| Weigh product scope or the bigger problem | `/plan-ceo-review` |
+| Turn a rough intent into a precise spec | `/spec` |
+| Implement a feature or bugfix with tests | `/tdd` |
+| Debug an error, test failure, or odd behavior | `/investigate` |
+| Review a diff before merge | `/code-review`, `/review` |
+| Tidy code for reuse/simplicity (no bug hunt) | `/simplify` |
+| Audit security | `/cso` |
+| QA a running web app | `/qa` (fixes), `/qa-only` (report) |
+| Verify a change actually works end to end | `/verify` |
+| Ship: commit, PR, version, changelog | `/ship` |
+| Merge, deploy, and confirm production health | `/land-and-deploy` |
+| Update docs after shipping | `/document-release`, `/document-generate` |
+| Review a UI/visual change | `/design-review`, `/plan-design-review` |
+| Save or restore working context across sessions | `/context-save`, `/context-restore` |
+| Record or review a session learning | `/learn` |
+| Check code-quality health or find refactors | `/health`, `/improve-arch` |
+
+## Notes
+
+- The slash command names above are the canonical triggers. The user may also
+  describe the intent in their own words ("ship this", "review the diff") —
+  route to the same skill.
+- Don't stack skills needlessly. Pick the one that fits; let it run its workflow.
+- A skill's own instructions take precedence once invoked.
