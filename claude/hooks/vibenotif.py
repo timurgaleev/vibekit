@@ -366,6 +366,9 @@ def send_http_get(url: str, endpoint: str) -> tuple[bool, str | None]:
         return False, None
 
 def send_vibenotif_api(url: str, token: str, payload: dict[str, Any]) -> bool:
+    if not is_valid_http_url(url):
+        debug_log("VibeNotif API: unsupported URL scheme, not sending token")
+        return False
     try:
         api_url = f"{url.rstrip('/')}/status"
         api_payload = json.dumps(
@@ -406,6 +409,9 @@ def _send_http_request(
 def is_localhost_url(url: str) -> bool:
     return "127.0.0.1" in url or "localhost" in url
 
+def is_valid_http_url(url: str) -> bool:
+    return isinstance(url, str) and url.startswith(("http://", "https://"))
+
 def try_http_targets(
     endpoint: str,
     data: str | None = None,
@@ -415,6 +421,9 @@ def try_http_targets(
     config = get_config()
 
     for url in config.http_urls:
+        if not is_valid_http_url(url):
+            debug_log(f"Skipping target with unsupported scheme: {url}")
+            continue
         if not include_localhost and is_localhost_url(url):
             continue
         debug_log(f"Trying HTTP: {url}")
@@ -621,6 +630,9 @@ def send_to_all(payload: dict[str, Any], is_start: bool = False) -> None:
     tasks: list[tuple[str, Any]] = []
 
     for url in config.http_urls:
+        if not is_valid_http_url(url):
+            debug_log(f"Skipping target with unsupported scheme: {url}")
+            continue
         u = url
         label = "Desktop App" if is_localhost_url(url) else f"HTTP ({url})"
         tasks.append((label, lambda u=u: send_http_post(u, "/status", payload_str)[0]))

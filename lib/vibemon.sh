@@ -28,6 +28,18 @@ if ! declare -F msg_warn >/dev/null 2>&1; then
   msg_warn()  { echo -e "${YELLOW}  ! $*${NC}"; }
 fi
 
+# Guarded recursive delete: refuse unless HOME is set and the target lives under
+# it. Prevents a `rm -rf` on a computed path from reaching outside the home dir
+# if HOME is empty or a path is built unexpectedly.
+_safe_rm_rf() {
+  local target="$1"
+  if [[ -z "$HOME" || "$target" != "$HOME"/* ]]; then
+    msg_warn "Refusing to remove path outside HOME: $target"
+    return 1
+  fi
+  rm -rf "$target"
+}
+
 # Purge Vibe Monitor: kill the running Electron app and delete its npx cache and
 # app data. Disabling via config only stops future auto-launch; this removes the
 # artifacts a prior launch left behind. Honors PREVIEW_ONLY (dry-run).
@@ -59,7 +71,7 @@ purge_vibemon() {
     if [[ "$PREVIEW_ONLY" == true ]]; then
       msg_add "WOULD remove npx cache: $hashdir"
     else
-      rm -rf "$hashdir"
+      _safe_rm_rf "$hashdir"
       msg_done "Removed npx cache: $hashdir"
     fi
   done
@@ -72,7 +84,7 @@ purge_vibemon() {
     if [[ "$PREVIEW_ONLY" == true ]]; then
       msg_add "WOULD remove app data: $dir"
     else
-      rm -rf "$dir"
+      _safe_rm_rf "$dir"
       msg_done "Removed app data: $dir"
     fi
   done
