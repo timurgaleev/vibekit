@@ -18,9 +18,10 @@ AI-assisted development environment settings for Claude Code, Cursor CLI, and Ki
 ```
 
 Caveman (`-C` / `CAVEMAN=true`) is opt-in and runs the upstream installer
-(`JuliusBrussee/caveman`) via `curl | bash`, which self-updates from `main` and
-needs Node >= 18. vibekit does not vendor its files; if Node is missing the step
-warns and skips without aborting the sync.
+(`JuliusBrussee/caveman`) via `curl | bash`, **pinned to a specific commit SHA**
+(override with `CAVEMAN_INSTALL_URL`) and needs Node >= 18. vibekit does not
+vendor its files; if Node is missing the step warns and skips without aborting
+the sync. See `SECURITY.md` for the trust model and how to bump the pin.
 
 ## Architecture
 

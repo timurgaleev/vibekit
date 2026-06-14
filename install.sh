@@ -57,7 +57,10 @@ VIBENOTIF=${VIBENOTIF:-true}   # Set to false or use -V flag to skip VibeNotif h
 VIBEMON=${VIBEMON:-false}      # Set to true or use -M flag to enable vibemon auto-launch
 VIBEMON_PURGE=${VIBEMON_PURGE:-false}  # Set to true or use -P flag to remove vibemon entirely
 CAVEMAN=${CAVEMAN:-false}      # Set to true or use -C flag to install the Caveman skill
-CAVEMAN_INSTALL_URL=${CAVEMAN_INSTALL_URL:-https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh}
+# Pinned to a specific commit (not `main`) so enabling -C never silently runs
+# whatever lands upstream. Review the upstream diff before bumping this SHA.
+# Override with CAVEMAN_INSTALL_URL=<url> to use latest main, a fork, or a mirror.
+CAVEMAN_INSTALL_URL=${CAVEMAN_INSTALL_URL:-https://raw.githubusercontent.com/JuliusBrussee/caveman/25d22f864ad68cc447a4cb93aefde918aa4aec9f/install.sh}
 
 # Counters
 ADDED=0
