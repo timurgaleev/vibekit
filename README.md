@@ -59,6 +59,7 @@ Always-loaded guidelines that shape how Claude behaves:
 | `security.md` | Security best practices |
 | `tests.md` | TDD workflow, 80% coverage target |
 | `obsidian.md` | Obsidian vault memory — read context, suggest saves |
+| `authorship.md` | No AI attribution; comments, commits, and PRs in your voice |
 
 ### Cursor
 
@@ -76,6 +77,7 @@ Cursor gets the same treatment as Claude and Kiro. Three types of config:
 | `patterns.mdc` | API patterns and conventions |
 | `perf.mdc` | Incremental changes and build troubleshooting |
 | `obsidian.mdc` | Obsidian vault memory — read context, suggest saves |
+| `authorship.mdc` | No AI attribution; comments, commits, and PRs in your voice |
 
 Copy rules into any project to activate them:
 ```bash
@@ -142,7 +144,9 @@ See [vibenotif]() for the Desktop app and ESP32 firmware.
 [Caveman](https://github.com/JuliusBrussee/caveman) is a Claude Code skill that
 compresses agent output (`/caveman`, `/caveman-commit`, `/caveman-review`, …).
 It is **opt-in** and **not vendored** into vibekit — instead, `install.sh -C`
-runs Caveman's own installer, so it always self-updates from upstream.
+runs Caveman's own installer, **pinned to a specific upstream commit** so a `-C`
+run never silently executes whatever lands on upstream `main`. See
+[`SECURITY.md`](SECURITY.md) for the trust model and how to bump the pin.
 
 ```bash
 ./install.sh -C            # or: CAVEMAN=true ./install.sh
@@ -153,9 +157,20 @@ Notes:
   missing, the step warns and skips without aborting the rest of the sync.
 - Caveman auto-detects your installed agents (Claude, Cursor, …) and installs
   into each.
-- `-C` runs `curl -fsSL .../caveman/main/install.sh | bash`. Override the source
-  with `CAVEMAN_INSTALL_URL=<url>` if you want to pin or mirror it.
+- `-C` runs `curl -fsSL .../caveman/<pinned-sha>/install.sh | bash`. Override the
+  source with `CAVEMAN_INSTALL_URL=<url>` to use latest `main`, a fork, or a mirror.
 - In preview mode (`-n -C`) it prints the installer command without running it.
+
+---
+
+## Security & trust
+
+vibekit syncs config into your home directory and can run optional helpers. The
+install one-liner executes a remote script; `claude/settings.json` ships a
+low-friction `Bash(*)` auto-allow default; and `-C` runs a pinned third-party
+installer. Before installing — especially on a machine you care about — run
+`./install.sh -n` to preview, and read [`SECURITY.md`](SECURITY.md) for the full
+trust model and how to tighten the defaults.
 
 ---
 
