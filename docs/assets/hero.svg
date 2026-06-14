@@ -1,12 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="880" height="300" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="vibekit keeps one configuration source in sync across every AI coding tool — Claude Code, Cursor, and Kiro — with a single install command.">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 300" width="880" height="300" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" role="img" aria-label="With vibekit, your AI coding assistant codes to your style, plans before coding, reviews every change, and ships clean pull requests in your voice.">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0B0F17"/>
       <stop offset="1" stop-color="#121A2A"/>
     </linearGradient>
     <linearGradient id="wire" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#E6EDF3"/>
-      <stop offset="1" stop-color="#58A6FF"/>
+      <stop offset="0" stop-color="#3FB950"/>
+      <stop offset="0.4" stop-color="#58A6FF"/>
+      <stop offset="0.7" stop-color="#BC8CFF"/>
+      <stop offset="1" stop-color="#F0883E"/>
     </linearGradient>
     <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
       <feGaussianBlur stdDeviation="3" result="b"/>
@@ -18,53 +20,51 @@
 
   <!-- wordmark + tagline -->
   <text x="40" y="50" fill="#E6EDF3" font-size="26" font-weight="700">vibekit</text>
-  <text x="146" y="50" fill="#7D8590" font-size="14" font-weight="500">/ one config, every AI tool, always in sync</text>
+  <text x="146" y="50" fill="#7D8590" font-size="14" font-weight="500">/ habits your AI assistant didn't have yesterday</text>
 
-  <!-- source node -->
+  <!-- connector wire -->
+  <line x1="110" y1="170" x2="770" y2="170" stroke="#243049" stroke-width="3" stroke-linecap="round"/>
+  <line x1="110" y1="170" x2="770" y2="170" stroke="url(#wire)" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 650">
+    <animate attributeName="stroke-dashoffset" from="660" to="0" dur="4s" repeatCount="indefinite"/>
+  </line>
+  <circle r="7" fill="#fff" filter="url(#glow)">
+    <animateMotion path="M110,170 L770,170" dur="4s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- card 1 · rules -->
   <g>
-    <rect x="40" y="118" width="170" height="104" rx="14" fill="#0E1626" stroke="#E6EDF3" stroke-width="1.5"/>
-    <text x="125" y="150" text-anchor="middle" fill="#E6EDF3" font-size="16" font-weight="700">vibekit</text>
-    <text x="125" y="174" text-anchor="middle" fill="#7D8590" font-size="12.5">your config, versioned</text>
-    <text x="125" y="200" text-anchor="middle" fill="#58A6FF" font-size="12.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">./install.sh</text>
-  </g>
-
-  <!-- branching wires (base + animated overlay) -->
-  <g fill="none" stroke="#243049" stroke-width="3" stroke-linecap="round">
-    <path d="M210,170 C360,170 470,79 620,79"/>
-    <path d="M210,170 C360,170 470,170 620,170"/>
-    <path d="M210,170 C360,170 470,261 620,261"/>
-  </g>
-  <g fill="none" stroke="url(#wire)" stroke-width="3" stroke-linecap="round" stroke-dasharray="14 600">
-    <path d="M210,170 C360,170 470,79 620,79"><animate attributeName="stroke-dashoffset" from="614" to="0" dur="4s" repeatCount="indefinite"/></path>
-    <path d="M210,170 C360,170 470,170 620,170"><animate attributeName="stroke-dashoffset" from="614" to="0" dur="4s" begin="1.33s" repeatCount="indefinite"/></path>
-    <path d="M210,170 C360,170 470,261 620,261"><animate attributeName="stroke-dashoffset" from="614" to="0" dur="4s" begin="2.66s" repeatCount="indefinite"/></path>
-  </g>
-
-  <!-- traveling pulses -->
-  <circle r="6" fill="#fff" filter="url(#glow)"><animateMotion path="M210,170 C360,170 470,79 620,79" dur="4s" repeatCount="indefinite"/></circle>
-  <circle r="6" fill="#fff" filter="url(#glow)"><animateMotion path="M210,170 C360,170 470,170 620,170" dur="4s" begin="1.33s" repeatCount="indefinite"/></circle>
-  <circle r="6" fill="#fff" filter="url(#glow)"><animateMotion path="M210,170 C360,170 470,261 620,261" dur="4s" begin="2.66s" repeatCount="indefinite"/></circle>
-
-  <!-- target cards -->
-  <g>
-    <rect x="620" y="50" width="220" height="58" rx="12" fill="#0E1626" stroke="#3FB950" stroke-width="1.5" opacity="0.5">
-      <animate attributeName="opacity" values="0.5;1;0.5" dur="4s" keyTimes="0;0.33;0.55" repeatCount="indefinite"/>
+    <rect x="40" y="118" width="140" height="104" rx="12" fill="#0E1626" stroke="#3FB950" stroke-width="1.5" opacity="0.55">
+      <animate attributeName="opacity" values="0.55;1;0.55" dur="4s" keyTimes="0;0.06;0.25" repeatCount="indefinite"/>
     </rect>
-    <text x="640" y="78" fill="#3FB950" font-size="14" font-weight="700">Claude Code</text>
-    <text x="640" y="97" fill="#7D8590" font-size="12" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">~/.claude</text>
+    <text x="110" y="148" text-anchor="middle" fill="#3FB950" font-size="12.5" font-weight="700">CODES TO YOUR STYLE</text>
+    <text x="110" y="174" text-anchor="middle" fill="#E6EDF3" font-size="14.5" font-weight="600">Follows your rules</text>
+    <text x="110" y="198" text-anchor="middle" fill="#7D8590" font-size="11.5">style · security · tests</text>
   </g>
+  <!-- card 2 · plan -->
   <g>
-    <rect x="620" y="141" width="220" height="58" rx="12" fill="#0E1626" stroke="#58A6FF" stroke-width="1.5" opacity="0.5">
-      <animate attributeName="opacity" values="0.5;1;0.5" dur="4s" begin="1.33s" keyTimes="0;0.33;0.55" repeatCount="indefinite"/>
+    <rect x="260" y="118" width="140" height="104" rx="12" fill="#0E1626" stroke="#58A6FF" stroke-width="1.5" opacity="0.55">
+      <animate attributeName="opacity" values="0.55;1;0.55" dur="4s" keyTimes="0;0.31;0.5" repeatCount="indefinite"/>
     </rect>
-    <text x="640" y="169" fill="#58A6FF" font-size="14" font-weight="700">Cursor</text>
-    <text x="640" y="188" fill="#7D8590" font-size="12" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">~/.cursor</text>
+    <text x="330" y="148" text-anchor="middle" fill="#58A6FF" font-size="12.5" font-weight="700">THINKS FIRST</text>
+    <text x="330" y="174" text-anchor="middle" fill="#E6EDF3" font-size="14.5" font-weight="600">Plans before coding</text>
+    <text x="330" y="198" text-anchor="middle" fill="#7D8590" font-size="11.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">/plan-eng-review</text>
   </g>
+  <!-- card 3 · review -->
   <g>
-    <rect x="620" y="232" width="220" height="58" rx="12" fill="#0E1626" stroke="#BC8CFF" stroke-width="1.5" opacity="0.5">
-      <animate attributeName="opacity" values="0.5;1;0.5" dur="4s" begin="2.66s" keyTimes="0;0.33;0.55" repeatCount="indefinite"/>
+    <rect x="480" y="118" width="140" height="104" rx="12" fill="#0E1626" stroke="#BC8CFF" stroke-width="1.5" opacity="0.55">
+      <animate attributeName="opacity" values="0.55;1;0.55" dur="4s" keyTimes="0;0.56;0.75" repeatCount="indefinite"/>
     </rect>
-    <text x="640" y="260" fill="#BC8CFF" font-size="14" font-weight="700">Kiro</text>
-    <text x="640" y="279" fill="#7D8590" font-size="12" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">~/.kiro</text>
+    <text x="550" y="148" text-anchor="middle" fill="#BC8CFF" font-size="12.5" font-weight="700">CATCHES BUGS</text>
+    <text x="550" y="174" text-anchor="middle" fill="#E6EDF3" font-size="14.5" font-weight="600">Reviews every change</text>
+    <text x="550" y="198" text-anchor="middle" fill="#7D8590" font-size="11.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">/code-review</text>
+  </g>
+  <!-- card 4 · ship -->
+  <g>
+    <rect x="700" y="118" width="140" height="104" rx="12" fill="#0E1626" stroke="#F0883E" stroke-width="1.5" opacity="0.55">
+      <animate attributeName="opacity" values="0.55;1;0.55" dur="4s" keyTimes="0;0.81;1" repeatCount="indefinite"/>
+    </rect>
+    <text x="770" y="148" text-anchor="middle" fill="#F0883E" font-size="12.5" font-weight="700">IN YOUR VOICE</text>
+    <text x="770" y="174" text-anchor="middle" fill="#E6EDF3" font-size="14.5" font-weight="600">Ships clean PRs</text>
+    <text x="770" y="198" text-anchor="middle" fill="#7D8590" font-size="11.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">/ship</text>
   </g>
 </svg>
