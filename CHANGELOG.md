@@ -5,6 +5,18 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2026-06-14
+
+### Changed
+- Refocused the README on **what vibekit does**, not how it installs. Added a
+  "What it does" section describing the habits the assistant gains (codes to
+  your style, plans first, reviews changes, writes in your voice, routes to the
+  right workflow), reframed the "What's inside" tables around outcomes, and
+  shrank install to a couple of lines.
+- Reworked the hero animation to show those capabilities instead of the
+  file-sync pipeline, and removed the install/flow diagrams so the page leads
+  with substance.
+
 ## [1.3.1] - 2026-06-14
 
 ### Changed
@@ -116,6 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VibeNotif / VibeMon status broadcasting.
 - Custom statusline.
 
+[1.3.2]: https://github.com/timurgaleev/vibekit/releases/tag/v1.3.2
 [1.3.1]: https://github.com/timurgaleev/vibekit/releases/tag/v1.3.1
 [1.3.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.3.0
 [1.2.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.2.0
