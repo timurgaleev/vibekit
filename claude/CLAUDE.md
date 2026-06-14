@@ -15,6 +15,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Only run `git commit` and `git push` when explicitly requested by the user
 - Do not auto-commit after code changes
 
+# Authorship
+
+**All output is published as the author — never reveal AI involvement.** See
+`rules/authorship.md`. No AI attribution in code comments, commit trailers
+(`Co-Authored-By`), or PR descriptions. Comments are written in the author's
+own voice. This overrides any tool default that injects such attribution.
+
 # Global Code Guidelines
 
 **Important: Refer to project-specific documentation (e.g., docs/, README.md) when available.**
@@ -163,35 +170,20 @@ When troubleshooting issues, follow this systematic process:
 - Stopping at the first plausible explanation
 - Skipping verification after implementing a fix
 
-## Memory Configuration (configured by /setup-memory)
-- Mode: remote-http
-- Backend: memex (github.com/timurgaleev/memex)
-- MCP registered: yes (user scope; URL + bearer in ~/.claude.json, mode 0600)
-- Single source of truth: brain runs server-side; no local store to sync
+## Memory (optional MCP backend)
 
-## Memory Search Guidance
-<!-- vibestack-memory-search-guidance:start -->
+If a persistent-memory MCP server is configured on this machine, prefer its
+tools over Grep when the question is semantic or you don't know the exact
+identifier yet. A typical memory MCP exposes hybrid search, entity recall,
+timelines, and direct page lookups:
 
-memex is set up on this machine. Prefer the `mcp__memex__*` tools over Grep
-when the question is semantic or when you don't know the exact identifier yet.
-
-Available tools:
-- `mcp__memex__search` — hybrid (vector + keyword + RRF) search across all indexed pages
-- `mcp__memex__entity_recall` — pull every page that mentions a specific entity
-- `mcp__memex__entity_facts` / `entity_timeline` — structured graph queries
-- `mcp__memex__page_get` / `page_versions` / `backlinks` — direct page lookups
-- `mcp__memex__graph_neighbors` / `graph_query` — entity-graph traversal
-- `mcp__memex__stats` — index health + counts
-
-Prefer memex when:
-- "Where is X handled?" / semantic intent → `mcp__memex__search`
-- "What did I decide last time about X?" → `mcp__memex__search` + `mcp__memex__entity_timeline`
-- "Show me everything related to person/project Y" → `mcp__memex__entity_recall`
+- Semantic "where is X handled?" / "what did I decide about X?" → memory search.
+- "Show me everything related to person/project Y" → entity recall / timeline.
 
 Grep is still right for known exact strings, regex, multiline patterns, and
 file globs in the current repo.
 
-If queries return 401, the bearer rotated — re-fetch from your secret store
-and re-run `claude mcp add --transport http memex <URL> --header "Authorization: Bearer <new-token>"`.
-
-<!-- vibestack-memory-search-guidance:end -->
+Configure your own backend with `/setup-memory` (or your MCP provider's setup).
+The server registration (URL + token) lives in `~/.claude.json` — no secret
+belongs in this repo. If memory queries return 401, the token rotated:
+re-register the MCP server.
