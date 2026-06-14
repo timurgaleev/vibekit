@@ -5,6 +5,32 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-14
+
+### Added
+- `authorship` rule (`claude/rules/authorship.md`, `cursor/rules/authorship.mdc`,
+  pointer in `claude/CLAUDE.md`): code comments, commit messages, and PR
+  descriptions are written in the author's voice with no AI attribution — no
+  `Co-Authored-By: Claude` trailer, no "Generated with Claude Code" footer.
+- `SECURITY.md` documenting the trust model (install one-liner, `Bash(*)`
+  auto-allow default, Caveman supply chain, VibeNotif network egress) and how to
+  tighten each. README gains a "Security & trust" section linking to it.
+- Tests for the `lib/vibemon.sh` delete guard and the VibeNotif URL-scheme check.
+
+### Changed
+- Model-selection guidance in the `perf` rules is now tier-based ("latest Opus /
+  Sonnet / Haiku") instead of pinned version numbers, so it stops going stale.
+- Genericized the memory-MCP guidance in `claude/CLAUDE.md` — removed personal
+  backend references; the public config no longer names a specific provider.
+
+### Security
+- Pinned the Caveman installer to a specific upstream commit SHA instead of
+  `main`, so `-C` never silently runs newly pushed upstream code. Override with
+  `CAVEMAN_INSTALL_URL` to use latest `main`, a fork, or a mirror.
+- VibeNotif hooks validate that each target URL uses an `http`/`https` scheme
+  before sending; the auth token is only sent to a valid http(s) origin.
+- `lib/vibemon.sh` guards its `rm -rf` calls to refuse any path outside `$HOME`.
+
 ## [1.1.1] - 2026-05-31
 
 ### Changed
@@ -68,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VibeNotif / VibeMon status broadcasting.
 - Custom statusline.
 
+[1.2.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.2.0
 [1.1.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.1.0
 [1.0.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.0.0
 [0.4.0]: https://github.com/timurgaleev/vibekit/releases/tag/v0.4.0
