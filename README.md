@@ -1,247 +1,134 @@
 # vibekit
 
-Personal configuration for AI coding tools — Claude Code, Kiro, and Cursor. Keeps your settings versioned and synced across machines via a single script.
+<p align="center">
+  <img src="./docs/assets/hero.svg" alt="vibekit keeps one configuration source in sync across Claude Code, Cursor, and Kiro with a single install command." width="100%">
+</p>
 
-```
-vibekit/claude/  →  ~/.claude/
-vibekit/kiro/    →  ~/.kiro/
-vibekit/cursor/  →  ~/.cursor/
-```
+<p align="center">
+  <b>One configuration for every AI coding tool — versioned, synced, yours.</b><br>
+  Set up Claude Code, Cursor, and Kiro the same way on every machine, with a single command.
+</p>
+
+<p align="center">
+  <a href="https://github.com/timurgaleev/vibekit/releases"><img src="https://img.shields.io/github/v/release/timurgaleev/vibekit?style=flat-square&color=000" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-000?style=flat-square" alt="MIT"></a>
+  <a href="SECURITY.md"><img src="https://img.shields.io/badge/security-policy-000?style=flat-square" alt="Security policy"></a>
+  <a href="https://github.com/timurgaleev/vibekit/stargazers"><img src="https://img.shields.io/github/stars/timurgaleev/vibekit?style=flat-square&color=000" alt="Stars"></a>
+</p>
 
 ---
 
-## Install
+## What is this? (30-second version)
+
+**If you use an AI coding assistant** (Claude Code, Cursor, or Kiro), vibekit is
+the one place your settings live. Instead of re-configuring each tool on each
+laptop by hand, you keep everything in this repo and run one command — and all
+three tools behave the same way, everywhere. New machine? One command and you're
+set up exactly like before.
+
+**For engineers:** a versioned config repo that syncs `CLAUDE.md`, behavior
+rules, sub-agents, status hooks, a custom statusline, and permissions into
+`~/.claude`, `~/.cursor`, and `~/.kiro`. MD5-diffed, deep-merged so your local
+tweaks survive, dry-runnable, no telemetry. Your config, in git, under your name.
+
+> Think of it as dotfiles for your AI tools: edit once, commit, sync everywhere.
+
+---
+
+## Install in 30 seconds
 
 ```bash
-# One-liner (clones repo and syncs everything)
+# Clones the repo and syncs everything
 bash -c "$(curl -fsSL timurgaleev.github.io/vibekit/install.sh)"
+```
 
-# Or if you already cloned the repo
-./install.sh
+Already have the repo? Just run it — and preview first if you like:
 
-# Preview changes without writing anything
-./install.sh -n
+```bash
+./install.sh        # apply
+./install.sh -n     # preview every change, write nothing
+```
 
-# Also install the optional Caveman skill (see below)
-./install.sh -C
+Open a new session of your tool and your rules, agents, and statusline are live.
+
+> On a machine you care about, run `./install.sh -n` first to see the diff. See
+> [`SECURITY.md`](SECURITY.md) for the full trust model.
+
+---
+
+## Why people use it
+
+- 🧩 **One source, three tools.** Edit a rule once; Claude Code, Cursor, and Kiro all pick it up.
+- 💻 **Same setup everywhere.** New laptop to fully configured in one command.
+- 🛟 **Safe syncs.** Changes are previewable (`-n`) and merged so your local plugins and permissions survive.
+- 🔒 **Yours, private.** No accounts, no telemetry. Everything lives on your machine and in your git repo.
+- 🎛️ **Live feedback.** A custom statusline and an optional monitor show what your assistant is doing in real time.
+
+---
+
+## How it works
+
+One repo, synced into whichever tools you use:
+
+```mermaid
+flowchart LR
+  R["📦 vibekit<br/>rules · agents · hooks · settings"] -->|"./install.sh"| C["Claude Code<br/>~/.claude"]
+  R -->|"./install.sh"| U["Cursor<br/>~/.cursor"]
+  R -->|"./install.sh"| K["Kiro<br/>~/.kiro"]
+```
+
+`install.sh` clones (or pulls) the repo, compares each file by hash, shows you
+the diff, and copies the changes across. Settings are deep-merged, so your
+locally enabled plugins and permission tweaks are never clobbered.
+
+Your assistant's state shows up live, from first prompt to finished task:
+
+```mermaid
+flowchart LR
+  A["start"] --> B["thinking"] --> P["planning"] --> W["working"] --> D["done"]
 ```
 
 ---
 
 ## What's inside
 
-### Agents
+| Piece | What it gives your assistant |
+|-------|------------------------------|
+| `CLAUDE.md` + `rules/` | Always-on guidelines: how to think, code, review, and which skill to use |
+| `agents/` | Specialized sub-agents to delegate work (planner, reviewer, debugger, …) |
+| Status hooks | Broadcast session state to the statusline and optional monitor |
+| Statusline | Live bar: branch, model, tokens, cost, context usage |
 
-Specialized sub-agents Claude can delegate work to:
+**The rules that shape behavior:**
 
-| Agent | What it does |
-|-------|-------------|
-| `task-planner` | Breaks down complex features into step-by-step plans |
-| `system-designer` | Architecture and system design decisions |
-| `build-doctor` | Fixes lint, typecheck, and build errors automatically |
-| `quality-guard` | Reviews code for quality, security, and maintainability |
-| `bug-hunter` | Debugs errors and failing tests |
-| `code-shaper` | Refactors code without changing behavior |
-| `spec-writer` | Writes unit and integration tests |
-| `docs-crafter` | Creates and updates documentation |
+| Rule | Enforces |
+|------|----------|
+| `language` | Always respond in English |
+| `style` | Code style and file organization |
+| `git` | Commit format and PR process |
+| `security` | Security best practices |
+| `tests` | TDD workflow, 80% coverage target |
+| `patterns` | API patterns and conventions |
+| `perf` | Model-tier selection strategy |
+| `obsidian` | Read project context from an Obsidian vault, suggest saves |
+| `authorship` | No AI attribution; comments, commits, and PRs in your voice |
+| `skills` | Routes each task to the matching [vibestack](https://github.com/timurgaleev/vibestack) skill (`/ship`, `/plan-eng-review`, …) |
 
-### Rules
-
-Always-loaded guidelines that shape how Claude behaves:
-
-| File | What it enforces |
-|------|-----------------|
-| `style.md` | Code style and file organization |
-| `git.md` | Commit format and PR process |
-| `language.md` | Always respond in English |
-| `patterns.md` | API patterns and conventions |
-| `perf.md` | Model selection strategy |
-| `security.md` | Security best practices |
-| `tests.md` | TDD workflow, 80% coverage target |
-| `obsidian.md` | Obsidian vault memory — read context, suggest saves |
-| `authorship.md` | No AI attribution; comments, commits, and PRs in your voice |
-| `skills.md` | Routes each task to the matching [vibestack](https://github.com/timurgaleev/vibestack) skill (`/ship`, `/plan-eng-review`, …) |
-
-### Cursor
-
-Cursor gets the same treatment as Claude and Kiro. Three types of config:
-
-**Rules** (`~/.cursor/rules/*.mdc`) — always-applied AI behavior:
-
-| File | What it enforces |
-|------|-----------------|
-| `language.mdc` | Always respond in English |
-| `style.mdc` | Code style and file organization |
-| `git.mdc` | Commit format and PR process |
-| `security.mdc` | Security best practices |
-| `tests.mdc` | TDD workflow, 80% coverage target |
-| `patterns.mdc` | API patterns and conventions |
-| `perf.mdc` | Incremental changes and build troubleshooting |
-| `obsidian.mdc` | Obsidian vault memory — read context, suggest saves |
-| `authorship.mdc` | No AI attribution; comments, commits, and PRs in your voice |
-| `skills.mdc` | Routes each task to the matching [vibestack](https://github.com/timurgaleev/vibestack) skill (`/ship`, `/plan-eng-review`, …) |
-
-Copy rules into any project to activate them:
-```bash
-cp -r ~/.cursor/rules .cursor/rules
-```
-
-**Context ignore** (`~/.cursor/ignore`) — files excluded from AI indexing (dependencies, build outputs, secrets, generated files).
-
-**Settings** (`cursor/settings.json`) — Cursor/VS Code editor settings. Applied manually since Cursor stores these at a different path:
-
-```bash
-# macOS
-cp cursor/settings.json ~/Library/Application\ Support/Cursor/User/settings.json
-
-# Linux
-cp cursor/settings.json ~/.config/Cursor/User/settings.json
-```
-
-`install.sh` will warn you if the file has changed and needs to be re-applied.
+Cursor gets the same rules as `.mdc` files; copy them into any project with
+`cp -r ~/.cursor/rules .cursor/rules`.
 
 ---
 
-### Status Line
-
-A custom status bar rendered in the Claude Code UI, showing real-time session info:
-
-```
-project  feature/xxx *  Opus 4  12.5K / 3.2K  $0.45  2m30s  17:00  +42 -15  62%
-```
-
-Shows: project name, git branch, model, token usage, cost, session time, token reset timer, diff stats, and context window usage.
-
-### Vibe Monitor
-
-Broadcasts Claude's current state to external displays in real-time.
-
-**Supported targets:**
-
-| Target | Details |
-|--------|---------|
-| Desktop App | Frameless Electron app (macOS) at `localhost:19280` |
-| ESP32 Device | ESP32-C6-LCD-1.47 via USB Serial or HTTP |
-
-**States sent:**
-
-| State | When |
-|-------|------|
-| `start` | Session begins |
-| `thinking` | Processing a prompt |
-| `planning` | Plan mode active |
-| `working` | Executing a tool |
-| `packing` | Compacting context |
-| `notification` | Waiting for user input |
-| `done` | Task complete |
-
-See [vibenotif]() for the Desktop app and ESP32 firmware.
-
----
-
-## Optional tools
-
-### Caveman
-
-[Caveman](https://github.com/JuliusBrussee/caveman) is a Claude Code skill that
-compresses agent output (`/caveman`, `/caveman-commit`, `/caveman-review`, …).
-It is **opt-in** and **not vendored** into vibekit — instead, `install.sh -C`
-runs Caveman's own installer, **pinned to a specific upstream commit** so a `-C`
-run never silently executes whatever lands on upstream `main`. See
-[`SECURITY.md`](SECURITY.md) for the trust model and how to bump the pin.
+## More
 
 ```bash
-./install.sh -C            # or: CAVEMAN=true ./install.sh
+./install.sh -n     # preview, write nothing
+./install.sh -V     # disable VibeNotif status hooks
+./install.sh -M     # enable the Vibe Monitor desktop app
+./install.sh -C     # install the optional Caveman skill
+./install.sh -h     # all options
 ```
 
-Notes:
-- Requires **Node >= 18** (the installer delegates to `npx`). If Node is
-  missing, the step warns and skips without aborting the rest of the sync.
-- Caveman auto-detects your installed agents (Claude, Cursor, …) and installs
-  into each.
-- `-C` runs `curl -fsSL .../caveman/<pinned-sha>/install.sh | bash`. Override the
-  source with `CAVEMAN_INSTALL_URL=<url>` to use latest `main`, a fork, or a mirror.
-- In preview mode (`-n -C`) it prints the installer command without running it.
-
----
-
-## Security & trust
-
-vibekit syncs config into your home directory and can run optional helpers. The
-install one-liner executes a remote script; `claude/settings.json` ships a
-low-friction `Bash(*)` auto-allow default; and `-C` runs a pinned third-party
-installer. Before installing — especially on a machine you care about — run
-`./install.sh -n` to preview, and read [`SECURITY.md`](SECURITY.md) for the full
-trust model and how to tighten the defaults.
-
----
-
-## Configuration
-
-### VibeNotif config (`~/.vibenotif/config.json`)
-
-This file must be created manually — VibeNotif will not send status updates without it.
-
-```bash
-mkdir -p ~/.vibenotif
-cat > ~/.vibenotif/config.json << 'EOF'
-{
-  "cache_path": "~/.vibenotif/cache/statusline.json",
-  "auto_launch": false,
-  "http_urls": ["http://127.0.0.1:19280"]
-}
-EOF
-```
-
-The Vibe Monitor desktop app (`npx vibemon@latest`) is **disabled by default**.
-`install.sh` writes `auto_launch: false` into this config on every run; pass
-`-M` (or `VIBEMON=true`) to opt in and auto-start the Electron app with every
-Claude session.
-
-Full config with all options:
-
-```json
-{
-  "cache_path": "~/.vibenotif/cache/statusline.json",
-  "auto_launch": false,
-  "http_urls": ["http://127.0.0.1:19280"],
-  "serial_port": "/dev/cu.usbmodem*",
-  "vibenotif_url": "https://vibenotif.example.com",
-  "vibenotif_token": "your-token",
-  "token_reset_hours": 5
-}
-```
-
-| Key | Description |
-|-----|-------------|
-| `auto_launch` | Auto-start Desktop App when Claude starts (managed by `install.sh`; use `-M` to enable) |
-| `http_urls` | HTTP targets to send status to (array) |
-| `serial_port` | USB serial port for ESP32 (wildcards OK) |
-| `vibenotif_url` | VibeNotif cloud API URL |
-| `vibenotif_token` | VibeNotif auth token |
-| `token_reset_hours` | Rolling token window in hours (`0` = Enterprise, no limit) |
-
-### Environment variables (`~/.claude/.env.local`)
-
-You can use env vars instead of (or alongside) the config file. Config file takes precedence.
-
-```bash
-VIBENOTIF_CACHE_PATH=~/.vibenotif/cache/statusline.json
-VIBENOTIF_AUTO_LAUNCH=0
-VIBENOTIF_HTTP_URLS=http://127.0.0.1:19280,http://192.168.0.185
-VIBENOTIF_SERIAL_PORT=/dev/cu.usbmodem*
-VIBENOTIF_TOKEN_RESET_HOURS=5
-# VIBENOTIF_URL=https://vibenotif.example.com
-# VIBENOTIF_TOKEN=your-token
-```
-
-### VibeNotif CLI
-
-```bash
-python3 ~/.claude/hooks/vibenotif.py --lock [project]   # Lock display to a project
-python3 ~/.claude/hooks/vibenotif.py --unlock            # Unlock
-python3 ~/.claude/hooks/vibenotif.py --status            # Show current status
-python3 ~/.claude/hooks/vibenotif.py --lock-mode         # Show current lock mode
-python3 ~/.claude/hooks/vibenotif.py --lock-mode first-project  # Set lock mode
-python3 ~/.claude/hooks/vibenotif.py --reboot            # Reboot ESP32 device
-```
+- [`docs/configuration.md`](docs/configuration.md) — statusline, Vibe Monitor, VibeNotif config, env vars, Cursor settings, Caveman
+- [`SECURITY.md`](SECURITY.md) — trust model and how to tighten defaults
+- [`CHANGELOG.md`](CHANGELOG.md) · [`LICENSE`](LICENSE) (MIT)
