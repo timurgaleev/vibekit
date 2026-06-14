@@ -5,6 +5,17 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-06-14
+
+### Changed
+- Rewrote the README as an open-source landing page: an animated hero diagram
+  (`docs/assets/hero.svg`), a dual-audience "What is this?" intro for both
+  non-technical and technical readers, badges, and Mermaid diagrams for the sync
+  flow and session-state lifecycle. Mirrors the vibestack README style.
+- Moved the detailed configuration reference (statusline, Vibe Monitor, VibeNotif
+  config, env vars, Cursor settings, Caveman) into `docs/configuration.md` so the
+  README stays short and approachable.
+
 ## [1.3.0] - 2026-06-14
 
 ### Added
@@ -105,6 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VibeNotif / VibeMon status broadcasting.
 - Custom statusline.
 
+[1.3.1]: https://github.com/timurgaleev/vibekit/releases/tag/v1.3.1
 [1.3.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.3.0
 [1.2.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.2.0
 [1.1.0]: https://github.com/timurgaleev/vibekit/releases/tag/v1.1.0
