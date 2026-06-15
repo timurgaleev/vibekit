@@ -14,6 +14,7 @@ AI-assisted development environment settings for Claude Code, Cursor CLI, and Ki
 ./install.sh -V       # Disable VibeNotif (skip vibenotif.py and hooks)
 ./install.sh -M       # Enable Vibe Monitor desktop app auto-launch
 ./install.sh -C       # Install the Caveman token-compression skill (opt-in)
+./install.sh -Y       # Install the Ponytail minimal-code plugin (opt-in)
 ./install.sh -h       # Show help
 ```
 
@@ -22,6 +23,14 @@ Caveman (`-C` / `CAVEMAN=true`) is opt-in and runs the upstream installer
 (override with `CAVEMAN_INSTALL_URL`) and needs Node >= 18. vibekit does not
 vendor its files; if Node is missing the step warns and skips without aborting
 the sync. See `SECURITY.md` for the trust model and how to bump the pin.
+
+Ponytail (`-Y` / `PONYTAIL=true`) is opt-in and installs the
+`DietrichGebert/ponytail` plugin via the official `claude plugin` CLI
+(`marketplace add` + `install`). It steers the agent toward minimal,
+stdlib-first code. Override the source with `PONYTAIL_REPO`. Needs the `claude`
+CLI; if missing, the step warns and skips without aborting the sync. Unlike
+Caveman it tracks the marketplace repo's default branch (no commit-SHA pin).
+Restart Claude Code after install to load it.
 
 ## Architecture
 

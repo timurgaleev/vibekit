@@ -15,6 +15,7 @@
 #   ./install.sh -M       # Enable Vibe Monitor desktop app auto-launch
 #   ./install.sh -P       # Purge Vibe Monitor (kill process, remove cache + data)
 #   ./install.sh -C       # Install the Caveman token-compression skill
+#   ./install.sh -Y       # Install the Ponytail minimal-code plugin
 #   ./install.sh -h       # Show help
 #
 # Environment variables:
@@ -23,6 +24,8 @@
 #   VIBEMON_PURGE=true ./install.sh # Same as -P flag
 #   CAVEMAN=true ./install.sh      # Same as -C flag
 #   CAVEMAN_INSTALL_URL=<url> ./install.sh   # Override Caveman installer source
+#   PONYTAIL=true ./install.sh     # Same as -Y flag
+#   PONYTAIL_REPO=<owner/repo> ./install.sh  # Override Ponytail marketplace source
 #
 # Vibe Monitor (the Electron desktop app launched via `npx vibemon@latest`)
 # is disabled by default — the install script writes `auto_launch: false`
@@ -39,6 +42,12 @@
 # skill that compresses agent output. It is disabled by default and self-updates
 # via its own installer; pass -C (or CAVEMAN=true) to run that installer. It
 # requires Node >= 18 and auto-detects which agents to install into.
+#
+# Ponytail (https://github.com/DietrichGebert/ponytail) is an optional Claude
+# Code plugin that steers the agent toward minimal, stdlib-first code. It is
+# disabled by default; pass -Y (or PONYTAIL=true) to install it via the official
+# `claude plugin` CLI. Unlike Caveman, the plugin CLI tracks the marketplace
+# repo's default branch — there is no commit-SHA pin.
 ################################################################################
 
 set -e
@@ -61,6 +70,9 @@ CAVEMAN=${CAVEMAN:-false}      # Set to true or use -C flag to install the Cavem
 # whatever lands upstream. Review the upstream diff before bumping this SHA.
 # Override with CAVEMAN_INSTALL_URL=<url> to use latest main, a fork, or a mirror.
 CAVEMAN_INSTALL_URL=${CAVEMAN_INSTALL_URL:-https://raw.githubusercontent.com/JuliusBrussee/caveman/25d22f864ad68cc447a4cb93aefde918aa4aec9f/install.sh}
+PONYTAIL=${PONYTAIL:-false}    # Set to true or use -Y flag to install the Ponytail plugin
+PONYTAIL_REPO=${PONYTAIL_REPO:-DietrichGebert/ponytail}  # Marketplace source (owner/repo, URL, or path)
+PONYTAIL_PLUGIN=${PONYTAIL_PLUGIN:-ponytail@ponytail}     # plugin@marketplace identifier
 
 # Counters
 ADDED=0
@@ -115,30 +127,33 @@ diff_preview() {
 
 
 # Parse arguments
-while getopts "nVMPCh" opt; do
+while getopts "nVMPCYh" opt; do
   case $opt in
     n) PREVIEW_ONLY=true ;;
     V) VIBENOTIF=false ;;
     M) VIBEMON=true ;;
     P) VIBEMON_PURGE=true ;;
     C) CAVEMAN=true ;;
+    Y) PONYTAIL=true ;;
     h)
-      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-h]"
+      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-Y] [-h]"
       echo "  -n  Preview mode (no changes written)"
       echo "  -V  Disable VibeNotif (skip vibenotif.py and hooks config)"
       echo "  -M  Enable Vibe Monitor desktop app auto-launch (off by default)"
       echo "  -P  Purge Vibe Monitor (kill process, delete npx cache + app data)"
       echo "  -C  Install the Caveman token-compression skill (off by default)"
+      echo "  -Y  Install the Ponytail minimal-code plugin (off by default)"
       echo "  -h  Show this help"
       echo ""
       echo "  VIBENOTIF=false $0    # Same as -V via env var"
       echo "  VIBEMON=true $0       # Same as -M via env var"
       echo "  VIBEMON_PURGE=true $0 # Same as -P via env var"
       echo "  CAVEMAN=true $0       # Same as -C via env var"
+      echo "  PONYTAIL=true $0      # Same as -Y via env var"
       exit 0
       ;;
     *)
-      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-h]"
+      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-Y] [-h]"
       exit 1
       ;;
   esac
@@ -173,6 +188,12 @@ if [[ "$CAVEMAN" == true ]]; then
   msg_info "Caveman skill: will install (-C)"
 else
   msg_info "Caveman skill: skipped (default — pass -C to install)"
+fi
+
+if [[ "$PONYTAIL" == true ]]; then
+  msg_info "Ponytail plugin: will install (-Y)"
+else
+  msg_info "Ponytail plugin: skipped (default — pass -Y to install)"
 fi
 
 # Clone or pull repository
@@ -534,6 +555,33 @@ if [[ "$CAVEMAN" == true ]]; then
       msg_done "Caveman installed"
     else
       msg_warn "Caveman installer failed — skipping (sync continues)"
+    fi
+  fi
+fi
+
+# Ponytail plugin: opt-in install via the official `claude plugin` CLI.
+# Off by default; enabled with -Y or PONYTAIL=true. Needs the `claude` CLI — if
+# it is missing we warn and skip rather than aborting the whole sync. The
+# marketplace add is idempotent: a second run reports "already added".
+if [[ "$PONYTAIL" == true ]]; then
+  echo -e "\n${CYAN}> Installing Ponytail plugin...${NC}"
+
+  if ! command -v claude >/dev/null 2>&1; then
+    msg_warn "claude CLI not found — skipping Ponytail"
+    msg_info "Install Claude Code, then re-run: $0 -Y"
+  elif [[ "$PREVIEW_ONLY" == true ]]; then
+    msg_warn "Preview mode: would install Ponytail plugin:"
+    msg_info "  claude plugin marketplace add $PONYTAIL_REPO"
+    msg_info "  claude plugin install $PONYTAIL_PLUGIN"
+  else
+    msg_info "Adding marketplace: $PONYTAIL_REPO"
+    if ! claude plugin marketplace add "$PONYTAIL_REPO" 2>/dev/null; then
+      msg_info "Marketplace already added (or could not be re-added)"
+    fi
+    if claude plugin install "$PONYTAIL_PLUGIN"; then
+      msg_done "Ponytail installed (restart Claude Code to load it)"
+    else
+      msg_warn "Ponytail install failed — skipping (sync continues)"
     fi
   fi
 fi

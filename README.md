@@ -96,6 +96,6 @@ care about, preview first and read [`SECURITY.md`](SECURITY.md).
 
 ## More
 
-- [`docs/configuration.md`](docs/configuration.md) — statusline, Vibe Monitor, VibeNotif config, env vars, Cursor settings, Caveman
+- [`docs/configuration.md`](docs/configuration.md) — statusline, Vibe Monitor, VibeNotif config, env vars, Cursor settings, Caveman, Ponytail
 - [`SECURITY.md`](SECURITY.md) — trust model and how to tighten defaults
 - [`CHANGELOG.md`](CHANGELOG.md) · [`LICENSE`](LICENSE) (MIT)
