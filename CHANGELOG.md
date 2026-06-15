@@ -5,6 +5,17 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-06-15
+
+### Added
+- Opt-in Ponytail plugin install via `install.sh -Y` (or `PONYTAIL=true`).
+  Installs [`DietrichGebert/ponytail`](https://github.com/DietrichGebert/ponytail)
+  — a minimal, stdlib-first coding framework — through the official
+  `claude plugin` CLI (`marketplace add` + `install`). Off by default; the
+  source is overridable with `PONYTAIL_REPO`. If the `claude` CLI is missing the
+  step warns and skips without aborting the sync. Documented in
+  `docs/configuration.md`; restart Claude Code after install to load it.
+
 ## [1.3.3] - 2026-06-14
 
 ### Fixed

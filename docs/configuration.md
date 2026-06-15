@@ -103,3 +103,14 @@ cp cursor/settings.json ~/.config/Cursor/User/settings.json
 Caveman's own installer, pinned to a specific upstream commit (override with
 `CAVEMAN_INSTALL_URL`). Requires Node >= 18; if missing, the step warns and
 skips. See [`SECURITY.md`](../SECURITY.md) for the trust model.
+
+## Ponytail plugin (`-Y`, opt-in)
+
+[Ponytail](https://github.com/DietrichGebert/ponytail) steers the agent toward
+minimal, stdlib-first code (the "best code is the code you never wrote"). It is
+**not vendored** — `install.sh -Y` installs it through the official
+`claude plugin` CLI (`marketplace add DietrichGebert/ponytail` + `install
+ponytail@ponytail`). Override the source with `PONYTAIL_REPO`. Requires the
+`claude` CLI; if missing, the step warns and skips. Unlike Caveman it tracks the
+marketplace repo's default branch (no commit-SHA pin). Restart Claude Code after
+install to load it.
