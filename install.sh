@@ -16,6 +16,7 @@
 #   ./install.sh -P       # Purge Vibe Monitor (kill process, remove cache + data)
 #   ./install.sh -C       # Install the Caveman token-compression skill
 #   ./install.sh -Y       # Install the Ponytail minimal-code plugin
+#   ./install.sh -R       # Skip RTK (Rust Token Killer; installed by default)
 #   ./install.sh -h       # Show help
 #
 # Environment variables:
@@ -26,6 +27,10 @@
 #   CAVEMAN_INSTALL_URL=<url> ./install.sh   # Override Caveman installer source
 #   PONYTAIL=true ./install.sh     # Same as -Y flag
 #   PONYTAIL_REPO=<owner/repo> ./install.sh  # Override Ponytail marketplace source
+#   RTK=false ./install.sh         # Same as -R flag (skip RTK)
+#   RTK_VERSION=v0.43.0 ./install.sh         # Pin a specific RTK release (default: latest)
+#   RTK_INSTALL_URL=<url> ./install.sh       # Override RTK installer source
+#   RTK_INSTALL_DIR=<dir> ./install.sh       # Install dir (passed to RTK; default ~/.local/bin)
 #
 # Vibe Monitor (the Electron desktop app launched via `npx vibemon@latest`)
 # is disabled by default — the install script writes `auto_launch: false`
@@ -48,6 +53,15 @@
 # disabled by default; pass -Y (or PONYTAIL=true) to install it via the official
 # `claude plugin` CLI. Unlike Caveman, the plugin CLI tracks the marketplace
 # repo's default branch — there is no commit-SHA pin.
+#
+# RTK (https://github.com/rtk-ai/rtk), "Rust Token Killer", is a standalone CLI
+# that compresses shell-command output before it reaches the model. It installs
+# by default; pass -R (or RTK=false) to skip. Install is idempotent: if `rtk` is
+# already on PATH the binary download is skipped and only the Claude Code hook is
+# refreshed. The installer (curl | sh) tracks the latest release unless RTK_VERSION
+# is set, and verifies SHA-256 checksums. `rtk init -g` writes a PreToolUse hook
+# into ~/.claude/settings.json; it runs after the settings merge so the hook
+# survives every sync. See SECURITY.md for the trust model.
 ################################################################################
 
 set -e
@@ -73,6 +87,11 @@ CAVEMAN_INSTALL_URL=${CAVEMAN_INSTALL_URL:-https://raw.githubusercontent.com/Jul
 PONYTAIL=${PONYTAIL:-false}    # Set to true or use -Y flag to install the Ponytail plugin
 PONYTAIL_REPO=${PONYTAIL_REPO:-DietrichGebert/ponytail}  # Marketplace source (owner/repo, URL, or path)
 PONYTAIL_PLUGIN=${PONYTAIL_PLUGIN:-ponytail@ponytail}     # plugin@marketplace identifier
+RTK=${RTK:-true}               # Set to false or use -R flag to skip RTK install
+# Tracks the latest tagged release; the installer verifies SHA-256 checksums.
+# Pin with RTK_VERSION=vX.Y.Z, or point RTK_INSTALL_URL at a fork/mirror/pinned ref.
+RTK_INSTALL_URL=${RTK_INSTALL_URL:-https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh}
+RTK_VERSION=${RTK_VERSION:-}    # Empty = latest release; set e.g. v0.43.0 to pin
 
 # Counters
 ADDED=0
@@ -127,7 +146,7 @@ diff_preview() {
 
 
 # Parse arguments
-while getopts "nVMPCYh" opt; do
+while getopts "nVMPCYRh" opt; do
   case $opt in
     n) PREVIEW_ONLY=true ;;
     V) VIBENOTIF=false ;;
@@ -135,14 +154,16 @@ while getopts "nVMPCYh" opt; do
     P) VIBEMON_PURGE=true ;;
     C) CAVEMAN=true ;;
     Y) PONYTAIL=true ;;
+    R) RTK=false ;;
     h)
-      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-Y] [-h]"
+      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-Y] [-R] [-h]"
       echo "  -n  Preview mode (no changes written)"
       echo "  -V  Disable VibeNotif (skip vibenotif.py and hooks config)"
       echo "  -M  Enable Vibe Monitor desktop app auto-launch (off by default)"
       echo "  -P  Purge Vibe Monitor (kill process, delete npx cache + app data)"
       echo "  -C  Install the Caveman token-compression skill (off by default)"
       echo "  -Y  Install the Ponytail minimal-code plugin (off by default)"
+      echo "  -R  Skip RTK install (Rust Token Killer; installed by default)"
       echo "  -h  Show this help"
       echo ""
       echo "  VIBENOTIF=false $0    # Same as -V via env var"
@@ -150,10 +171,11 @@ while getopts "nVMPCYh" opt; do
       echo "  VIBEMON_PURGE=true $0 # Same as -P via env var"
       echo "  CAVEMAN=true $0       # Same as -C via env var"
       echo "  PONYTAIL=true $0      # Same as -Y via env var"
+      echo "  RTK=false $0          # Same as -R via env var"
       exit 0
       ;;
     *)
-      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-Y] [-h]"
+      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-Y] [-R] [-h]"
       exit 1
       ;;
   esac
@@ -194,6 +216,12 @@ if [[ "$PONYTAIL" == true ]]; then
   msg_info "Ponytail plugin: will install (-Y)"
 else
   msg_info "Ponytail plugin: skipped (default — pass -Y to install)"
+fi
+
+if [[ "$RTK" == true ]]; then
+  msg_info "RTK: will install/refresh (default — pass -R to skip)"
+else
+  msg_info "RTK: skipped (-R)"
 fi
 
 # Clone or pull repository
@@ -582,6 +610,59 @@ if [[ "$PONYTAIL" == true ]]; then
       msg_done "Ponytail installed (restart Claude Code to load it)"
     else
       msg_warn "Ponytail install failed — skipping (sync continues)"
+    fi
+  fi
+fi
+
+# RTK (Rust Token Killer): standalone CLI that compresses shell-command output.
+# Installed by default; skip with -R or RTK=false. Idempotent — if `rtk` is
+# already on PATH the binary download is skipped and only the hook is refreshed.
+#
+# `rtk init -g` adds a PreToolUse hook to ~/.claude/settings.json. The settings
+# merge above is repo-authoritative for the hooks map, so init MUST run here
+# (after the merge) to re-apply the RTK hook on every sync instead of having it
+# clobbered. If the installer or init fails we warn and continue the sync.
+if [[ "$RTK" == true ]]; then
+  echo -e "\n${CYAN}> Installing RTK...${NC}"
+
+  # Honor the upstream installer's RTK_INSTALL_DIR so a binary placed off-PATH
+  # is still found for `rtk init -g`; default matches the installer's own default.
+  rtk_dir="${RTK_INSTALL_DIR:-${HOME}/.local/bin}"
+  rtk_bin="$(command -v rtk 2>/dev/null || true)"
+  if [[ -z "$rtk_bin" && -x "${rtk_dir}/rtk" ]]; then
+    rtk_bin="${rtk_dir}/rtk"
+  fi
+
+  if [[ -n "$rtk_bin" ]]; then
+    msg_info "RTK already installed ($("$rtk_bin" --version 2>/dev/null || echo present)) — skipping binary install"
+  elif [[ "$PREVIEW_ONLY" == true ]]; then
+    msg_warn "Preview mode: would install RTK:"
+    msg_info "  curl -fsSL \"$RTK_INSTALL_URL\" | sh"
+  else
+    msg_info "Running RTK installer: $RTK_INSTALL_URL"
+    [[ -n "$RTK_VERSION" ]] && msg_info "Pinned version: $RTK_VERSION"
+    # Download to a temp file first: `curl | sh` reports the shell's exit status,
+    # not curl's (no pipefail here), so a failed download would look like success.
+    rtk_installer="$(mktemp)"
+    if curl -fsSL "$RTK_INSTALL_URL" -o "$rtk_installer" && RTK_VERSION="$RTK_VERSION" sh "$rtk_installer"; then
+      msg_done "RTK installed"
+      rtk_bin="$(command -v rtk 2>/dev/null || true)"
+      [[ -z "$rtk_bin" && -x "${rtk_dir}/rtk" ]] && rtk_bin="${rtk_dir}/rtk"
+    else
+      msg_warn "RTK installer failed — skipping (sync continues)"
+    fi
+    rm -f "$rtk_installer"
+  fi
+
+  # Apply/refresh the Claude Code hook (additive + idempotent). Runs after the
+  # settings.json merge so the RTK PreToolUse hook survives each sync.
+  if [[ -n "$rtk_bin" ]]; then
+    if [[ "$PREVIEW_ONLY" == true ]]; then
+      msg_warn "Preview mode: would run: rtk init -g"
+    elif "$rtk_bin" init -g >/dev/null 2>&1; then
+      msg_done "RTK hook applied (restart Claude Code to load it)"
+    else
+      msg_warn "rtk init -g failed — hook not applied (sync continues)"
     fi
   fi
 fi

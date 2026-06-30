@@ -114,3 +114,22 @@ ponytail@ponytail`). Override the source with `PONYTAIL_REPO`. Requires the
 `claude` CLI; if missing, the step warns and skips. Unlike Caveman it tracks the
 marketplace repo's default branch (no commit-SHA pin). Restart Claude Code after
 install to load it.
+
+## RTK (`-R` to skip, on by default)
+
+[RTK](https://github.com/rtk-ai/rtk) ("Rust Token Killer") is a standalone Rust
+CLI that compresses shell-command output before it reaches the model. Unlike
+Caveman and Ponytail it is **on by default** — `install.sh` installs it via
+`curl | sh` and runs `rtk init -g` to apply the Claude Code `PreToolUse` hook.
+The install is idempotent: if `rtk` is already on `PATH` the binary download is
+skipped and only the hook is refreshed. Init runs **after** the `settings.json`
+merge so the RTK hook survives every sync (the merge is repo-authoritative for
+the hooks map and would otherwise clobber it).
+
+- Skip entirely with `-R` (or `RTK=false`).
+- The installer tracks the latest tagged release and verifies SHA-256
+  checksums. Pin with `RTK_VERSION=vX.Y.Z`; override the source with
+  `RTK_INSTALL_URL`.
+- Restart Claude Code after install to load the hook. Remove it with
+  `rtk init -g --uninstall`. See [`SECURITY.md`](../SECURITY.md) for the trust
+  model.
