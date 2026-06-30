@@ -5,6 +5,18 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.3] - 2026-06-30
+
+### Fixed
+- Hero graphic (`docs/assets/hero.svg`) clipped its own text. The four feature
+  cards were 140px wide but several labels and titles rendered wider
+  (`CODES TO YOUR STYLE`, `Plans before coding`, `Reviews every change`), so the
+  words crossed or spilled past the card borders. Widened each card to 170px and
+  re-spaced them evenly across the canvas (margins 40, gaps 40), moving the text
+  centers and the connector wire endpoints to match. All labels now sit inside
+  their boxes; colors, the breathing pulse, and the traveling-dot animation are
+  unchanged.
+
 ## [1.5.2] - 2026-06-30
 
 ### Fixed
