@@ -5,6 +5,19 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-06-30
+
+### Added
+- RTK ([rtk-ai/rtk](https://github.com/rtk-ai/rtk), "Rust Token Killer")
+  integration, **on by default**. A standalone Rust CLI that compresses
+  shell-command output before it reaches the model. `install.sh` installs it via
+  `curl | sh` (tracks the latest release, verifies SHA-256) and then runs
+  `rtk init -g` to apply the Claude Code `PreToolUse` hook. Install is
+  idempotent — skips the binary download when `rtk` is already on `PATH`. Init
+  runs after the `settings.json` merge so the RTK hook survives every sync.
+  Skip with `-R` / `RTK=false`; pin with `RTK_VERSION`; override the source with
+  `RTK_INSTALL_URL`. Documented in `CLAUDE.md` and `SECURITY.md`.
+
 ## [1.4.0] - 2026-06-15
 
 ### Added
