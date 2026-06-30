@@ -53,10 +53,21 @@ test_idempotent_skip() {
   fi
 }
 
+# R5: rtk init runs non-interactively (--auto-patch + </dev/null), or the
+# curl|bash one-liner hangs on rtk's settings.json patch prompt.
+test_init_non_interactive() {
+  if grep -q 'init -g --auto-patch </dev/null' "$INSTALL"; then
+    _pass "R5: rtk init runs non-interactively"
+  else
+    _fail "R5: rtk init may block on an interactive prompt"
+  fi
+}
+
 test_skip_flag
 test_init_after_merge
 test_no_pipe_to_sh
 test_idempotent_skip
+test_init_non_interactive
 echo "----"
 echo "PASS=$PASS FAIL=$FAIL"
 [[ "$FAIL" -eq 0 ]]

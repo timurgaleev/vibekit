@@ -656,13 +656,15 @@ if [[ "$RTK" == true ]]; then
 
   # Apply/refresh the Claude Code hook (additive + idempotent). Runs after the
   # settings.json merge so the RTK PreToolUse hook survives each sync.
+  # --auto-patch patches settings.json without prompting; </dev/null guards
+  # against any stray prompt blocking the curl|bash one-liner on a live TTY.
   if [[ -n "$rtk_bin" ]]; then
     if [[ "$PREVIEW_ONLY" == true ]]; then
-      msg_warn "Preview mode: would run: rtk init -g"
-    elif "$rtk_bin" init -g >/dev/null 2>&1; then
+      msg_warn "Preview mode: would run: rtk init -g --auto-patch"
+    elif "$rtk_bin" init -g --auto-patch </dev/null >/dev/null 2>&1; then
       msg_done "RTK hook applied (restart Claude Code to load it)"
     else
-      msg_warn "rtk init -g failed — hook not applied (sync continues)"
+      msg_warn "rtk init failed — hook not applied (sync continues)"
     fi
   fi
 fi
