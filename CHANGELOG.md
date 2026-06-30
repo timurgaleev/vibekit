@@ -5,6 +5,16 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-06-30
+
+### Fixed
+- `install.sh` hung on every sync after installing RTK. `rtk init -g` prompts
+  before patching `~/.claude/settings.json`, and the install step both ran it
+  without `--auto-patch` and redirected its output to `/dev/null`, so the prompt
+  was invisible and blocked the `curl | bash` one-liner on a live TTY. Now runs
+  `rtk init -g --auto-patch </dev/null` (non-interactive). Guarded by a new
+  `test/test_rtk.sh` assertion (R5).
+
 ## [1.5.0] - 2026-06-30
 
 ### Added
