@@ -12,7 +12,8 @@ AI-assisted development environment settings for Claude Code, Cursor CLI, and Ki
 ./install.sh          # Sync all changes (default; vibemon auto-launch OFF)
 ./install.sh -n       # Dry-run mode (show changes only)
 ./install.sh -V       # Disable VibeNotif (skip vibenotif.py and hooks)
-./install.sh -M       # Enable Vibe Monitor desktop app auto-launch
+./install.sh -M       # Enable Vibe Monitor desktop app auto-launch (opt-in)
+./install.sh -P       # Purge Vibe Monitor (LaunchAgent, process, cache, app data)
 ./install.sh -C       # Install the Caveman token-compression skill (opt-in)
 ./install.sh -Y       # Install the Ponytail minimal-code plugin (opt-in)
 ./install.sh -R       # Skip RTK (Rust Token Killer; installed by default)

@@ -44,9 +44,30 @@ _safe_rm_rf() {
 # app data. Disabling via config only stops future auto-launch; this removes the
 # artifacts a prior launch left behind. Honors PREVIEW_ONLY (dry-run).
 purge_vibemon() {
-  msg_info "Vibe Monitor purge: removing process, npx cache, and app data"
+  msg_info "Vibe Monitor purge: removing LaunchAgent, process, npx cache, and app data"
 
-  # 1. Kill running app (best-effort; pkill exits non-zero with no match)
+  # 1. Remove the self-installed LaunchAgent. The vibemon app registers
+  # com.vibemon.autostart for persistence; with RunAtLoad + KeepAlive it
+  # relaunches `npx vibemon@latest` at login and after every exit. This is the
+  # usual reason the app "comes back" even after auto_launch is set false, so
+  # boot it out of launchd before deleting the plist.
+  local plist="$HOME/Library/LaunchAgents/com.vibemon.autostart.plist"
+  if [[ -f "$plist" ]]; then
+    if [[ "$PREVIEW_ONLY" == true ]]; then
+      msg_add "WOULD remove LaunchAgent: $plist"
+    else
+      if command -v launchctl >/dev/null 2>&1; then
+        launchctl bootout "gui/$(id -u)/com.vibemon.autostart" 2>/dev/null \
+          || launchctl unload "$plist" 2>/dev/null || true
+      fi
+      _safe_rm_rf "$plist"
+      msg_done "Removed LaunchAgent: com.vibemon.autostart"
+    fi
+  else
+    msg_info "No vibemon LaunchAgent"
+  fi
+
+  # 2. Kill running app (best-effort; pkill exits non-zero with no match)
   if command -v pkill >/dev/null 2>&1; then
     if pgrep -f "node_modules/vibemon" >/dev/null 2>&1; then
       if [[ "$PREVIEW_ONLY" == true ]]; then
@@ -61,7 +82,7 @@ purge_vibemon() {
     fi
   fi
 
-  # 2. Remove npx cache (the vibemon npx env, including bundled Electron)
+  # 3. Remove npx cache (the vibemon npx env, including bundled Electron)
   local found_cache=false
   local d hashdir
   for d in "$HOME"/.npm/_npx/*/node_modules/vibemon; do
@@ -77,7 +98,7 @@ purge_vibemon() {
   done
   [[ "$found_cache" == false ]] && msg_info "No vibemon npx cache"
 
-  # 3. Remove app data (macOS + Linux locations)
+  # 4. Remove app data (macOS + Linux locations)
   local dir
   for dir in "$HOME/Library/Application Support/vibemon" "$HOME/.config/vibemon"; do
     [[ -d "$dir" ]] || continue
