@@ -28,7 +28,13 @@ States sent: `start`, `thinking`, `planning`, `working`, `packing`,
 
 The desktop app (`npx vibemon@latest`) is **disabled by default**. `install.sh`
 writes `auto_launch: false` on every run; pass `-M` (or `VIBEMON=true`) to opt in.
-Pass `-P` to purge it (kill the process, delete the npx cache and app data).
+
+Once launched, the app self-installs a LaunchAgent
+(`~/Library/LaunchAgents/com.vibemon.autostart.plist`) that relaunches it at
+login and after every exit — so flipping `auto_launch` back to `false` does not
+stop an already-running install. Pass `-P` (or `VIBEMON_PURGE=true`) to fully
+remove it: boot out and delete that LaunchAgent, kill the process, and delete
+the npx cache and app data. Combine with `-n` to preview what would be removed.
 
 ## VibeNotif config (`~/.vibenotif/config.json`)
 

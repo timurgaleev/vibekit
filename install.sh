@@ -37,11 +37,15 @@
 # into ~/.vibenotif/config.json so it does not start with Claude sessions.
 # Pass -M (or VIBEMON=true) to opt in.
 #
-# Disabling only flips the config flag; it leaves a previously launched app
-# running plus its npx cache (~/.npm/_npx/*/node_modules/vibemon) and app data
-# (~/Library/Application Support/vibemon on macOS, ~/.config/vibemon on Linux).
-# Pass -P (or VIBEMON_PURGE=true) to actively kill the process and delete those
-# artifacts. -P implies disabled and honors -n (preview shows what would go).
+# Disabling only flips the config flag; it leaves any previously launched app
+# running, plus its npx cache (~/.npm/_npx/*/node_modules/vibemon), app data
+# (~/Library/Application Support/vibemon on macOS, ~/.config/vibemon on Linux),
+# and the LaunchAgent the app self-installs for persistence
+# (~/Library/LaunchAgents/com.vibemon.autostart.plist) — which relaunches it at
+# login and after every exit, so the flag alone does not make it stay gone.
+# Pass -P (or VIBEMON_PURGE=true) to boot out that LaunchAgent, kill the process,
+# and delete every artifact. -P implies disabled and honors -n (preview shows
+# what would go).
 #
 # Caveman (https://github.com/JuliusBrussee/caveman) is an optional Claude Code
 # skill that compresses agent output. It is disabled by default and self-updates
@@ -160,7 +164,7 @@ while getopts "nVMPCYRh" opt; do
       echo "  -n  Preview mode (no changes written)"
       echo "  -V  Disable VibeNotif (skip vibenotif.py and hooks config)"
       echo "  -M  Enable Vibe Monitor desktop app auto-launch (off by default)"
-      echo "  -P  Purge Vibe Monitor (kill process, delete npx cache + app data)"
+      echo "  -P  Purge Vibe Monitor (LaunchAgent, process, npx cache + app data)"
       echo "  -C  Install the Caveman token-compression skill (off by default)"
       echo "  -Y  Install the Ponytail minimal-code plugin (off by default)"
       echo "  -R  Skip RTK install (Rust Token Killer; installed by default)"
@@ -484,9 +488,9 @@ PYEOF
   fi
 fi
 
-# Vibe Monitor purge: remove the process and on-disk artifacts a prior launch
-# left behind (runs after auto_launch is set false above). Independent of
-# VIBENOTIF so it works even with -V.
+# Vibe Monitor purge: boot out the self-installed LaunchAgent and remove the
+# process plus on-disk artifacts a prior launch left behind (runs after
+# auto_launch is set false above). Independent of VIBENOTIF so it works with -V.
 if [[ "$VIBEMON_PURGE" == true ]]; then
   if declare -F purge_vibemon >/dev/null 2>&1; then
     purge_vibemon

@@ -79,11 +79,44 @@ test_removes_multiple_hashdirs() {
   rm -rf "$HOME"
 }
 
+# B6: the self-installed LaunchAgent plist is removed (real culprit behind
+# the app relaunching after auto_launch is disabled).
+test_removes_launchagent() {
+  local HOME; HOME="$(make_sandbox)"
+  local plist="$HOME/Library/LaunchAgents/com.vibemon.autostart.plist"
+  mkdir -p "$(dirname "$plist")"
+  : > "$plist"
+
+  PREVIEW_ONLY=false
+  source "$LIB"
+  purge_vibemon
+
+  assert_absent "$plist" "B6: LaunchAgent plist removed"
+  rm -rf "$HOME"
+}
+
+# B7: preview mode leaves the LaunchAgent plist in place.
+test_preview_keeps_launchagent() {
+  local HOME; HOME="$(make_sandbox)"
+  local plist="$HOME/Library/LaunchAgents/com.vibemon.autostart.plist"
+  mkdir -p "$(dirname "$plist")"
+  : > "$plist"
+
+  PREVIEW_ONLY=true
+  source "$LIB"
+  purge_vibemon
+
+  assert_present "$plist" "B7: LaunchAgent survives preview"
+  rm -rf "$HOME"
+}
+
 test_removes_npx_cache
 test_removes_app_data
 test_preview_deletes_nothing
 test_graceful_when_empty
 test_removes_multiple_hashdirs
+test_removes_launchagent
+test_preview_keeps_launchagent
 echo "----"
 echo "PASS=$PASS FAIL=$FAIL"
 [[ "$FAIL" -eq 0 ]]
