@@ -15,6 +15,7 @@ AI-assisted development environment settings for Claude Code, Cursor CLI, and Ki
 ./install.sh -M       # Enable Vibe Monitor desktop app auto-launch
 ./install.sh -C       # Install the Caveman token-compression skill (opt-in)
 ./install.sh -Y       # Install the Ponytail minimal-code plugin (opt-in)
+./install.sh -R       # Skip RTK (Rust Token Killer; installed by default)
 ./install.sh -h       # Show help
 ```
 
@@ -31,6 +32,17 @@ stdlib-first code. Override the source with `PONYTAIL_REPO`. Needs the `claude`
 CLI; if missing, the step warns and skips without aborting the sync. Unlike
 Caveman it tracks the marketplace repo's default branch (no commit-SHA pin).
 Restart Claude Code after install to load it.
+
+RTK (`rtk-ai/rtk`, "Rust Token Killer") is **on by default** — it is a
+standalone Rust CLI that compresses shell-command output before it reaches the
+model. The install is idempotent: if `rtk` is already on `PATH` the binary
+download is skipped and only the Claude Code hook is refreshed. Skip it entirely
+with `-R` (or `RTK=false`). The installer (`curl | sh`) tracks the latest release
+unless `RTK_VERSION` is pinned, and verifies SHA-256 checksums; override the
+source with `RTK_INSTALL_URL`. `rtk init -g` writes a `PreToolUse` hook into
+`~/.claude/settings.json`; because the settings merge is repo-authoritative for
+the hooks map, init runs **after** that merge so the RTK hook survives every
+sync. Restart Claude Code after install to load it. See `SECURITY.md`.
 
 ## Architecture
 

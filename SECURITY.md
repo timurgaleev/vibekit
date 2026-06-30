@@ -70,6 +70,24 @@ https://raw.githubusercontent.com/JuliusBrussee/caveman/25d22f864ad68cc447a4cb93
 Note: Caveman's own installer may self-update on later runs — review upstream
 before enabling it on sensitive machines.
 
+### RTK (on by default, skip with `-R`)
+
+`./install.sh` runs the third-party RTK installer
+([rtk-ai/rtk](https://github.com/rtk-ai/rtk)) via `curl -fsSL ... | sh` unless
+you pass `-R` (or `RTK=false`). RTK is a standalone Rust binary; the install is
+idempotent — if `rtk` is already on `PATH` the download is skipped.
+
+- The installer tracks the **latest tagged release** by default (no commit-SHA
+  pin, unlike Caveman). It verifies SHA-256 checksums of the downloaded archive.
+- Pin a known release with `RTK_VERSION=vX.Y.Z ./install.sh`, or point
+  `RTK_INSTALL_URL` at a fork, mirror, or pinned ref to vet the script first.
+- `rtk init -g` modifies `~/.claude/settings.json` (adds a `PreToolUse` hook)
+  and writes `RTK.md` + a `rtk-rewrite.sh` hook script. The hook rewrites Bash
+  commands to `rtk` equivalents before they run, so RTK sees your shell command
+  output locally. Remove with `rtk init -g --uninstall`.
+- If the installer or `rtk init` fails, the step warns and skips without
+  aborting the sync.
+
 ### VibeNotif / Vibe Monitor network egress
 
 The status hooks (`hooks/vibenotif.py`) can POST session state to targets in
