@@ -5,6 +5,22 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2026-06-30
+
+### Fixed
+- Vibe Monitor came back after `auto_launch` was disabled. The app self-installs
+  a `com.vibemon.autostart` LaunchAgent (`RunAtLoad` + `KeepAlive`) that
+  relaunches `npx vibemon@latest` at login and after every exit, and
+  `purge_vibemon` never removed it — so `install.sh -P` left the restart loop
+  alive. Purge now boots the job out of launchd and deletes the plist before
+  killing the process and clearing the npx cache and app data. Guarded by new
+  `test/test_purge_vibemon.sh` assertions (B6, B7).
+
+### Changed
+- Documented the LaunchAgent persistence and the full scope of `-P` in
+  `install.sh` (header, `-h`, inline comments), `CLAUDE.md` (added the `-P`
+  line), and `docs/configuration.md`.
+
 ## [1.5.1] - 2026-06-30
 
 ### Fixed
