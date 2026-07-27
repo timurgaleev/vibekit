@@ -75,7 +75,7 @@ Each piece teaches the assistant one kind of habit:
 | `tests` | Follows TDD and aims for 80% coverage |
 | `patterns` | Reuses your API and code conventions |
 | `perf` | Picks the right model tier for the task |
-| `obsidian` | Reads project context from an Obsidian vault, suggests notes |
+| `memex` | Reads and saves cross-session context via the memex MCP server |
 | `authorship` | Comments, commits, and PRs in your voice — no AI attribution |
 | `skills` | Routes each task to the matching [vibestack](https://github.com/timurgaleev/vibestack) skill (`/ship`, `/plan-eng-review`, …) |
 
