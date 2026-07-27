@@ -177,20 +177,20 @@ When troubleshooting issues, follow this systematic process:
 - Stopping at the first plausible explanation
 - Skipping verification after implementing a fix
 
-## Memory (optional MCP backend)
+## Memory (memex MCP)
 
-If a persistent-memory MCP server is configured on this machine, prefer its
-tools over Grep when the question is semantic or you don't know the exact
-identifier yet. A typical memory MCP exposes hybrid search, entity recall,
-timelines, and direct page lookups:
+**Memex is the only persistent-memory backend.** See `rules/memex.md` for the
+full tool map. Do not use any other store (notes apps, vaults) for memory.
 
-- Semantic "where is X handled?" / "what did I decide about X?" → memory search.
-- "Show me everything related to person/project Y" → entity recall / timeline.
+Prefer memex tools over Grep when the question is semantic or you don't know
+the exact identifier yet:
+
+- Semantic "where is X handled?" / "what did I decide about X?" → `mcp__memex__search`.
+- "Show me everything related to person/project Y" → `mcp__memex__entity_recall` / `entity_timeline`.
 
 Grep is still right for known exact strings, regex, multiline patterns, and
 file globs in the current repo.
 
-Configure your own backend with `/setup-memory` (or your MCP provider's setup).
 The server registration (URL + token) lives in `~/.claude.json` — no secret
 belongs in this repo. If memory queries return 401, the token rotated:
 re-register the MCP server.

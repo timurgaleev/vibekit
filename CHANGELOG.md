@@ -5,6 +5,19 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.4] - 2026-07-27
+
+### Changed
+- Persistent memory now runs on the memex MCP server. New `claude/rules/memex.md`
+  and `cursor/rules/memex.mdc` describe the read (search, recall, entity recall,
+  chronicle) and write (facts, pages, timeline events) paths. The global
+  `CLAUDE.md` Memory section names memex as the only backend.
+
+### Removed
+- Obsidian memory rules (`claude/rules/obsidian.md`, `cursor/rules/obsidian.mdc`).
+  The vault is a personal app, not the assistant's memory store — memex replaces
+  it for cross-session context.
+
 ## [1.5.3] - 2026-06-30
 
 ### Fixed
