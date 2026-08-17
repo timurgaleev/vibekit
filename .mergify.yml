@@ -7,4 +7,3 @@ pull_request_rules:
       merge:
         method: merge
       dismiss_reviews: {}
-      delete_head_branch: {}
