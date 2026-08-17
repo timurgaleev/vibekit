@@ -8,6 +8,23 @@
 - Do not auto-commit after code changes
 - Only proceed when there is a clear instruction such as "commit"
 
+### Never, unless the user explicitly asks
+
+- Committing secrets (`.env`, API keys, tokens), binaries, or generated files
+- Bypassing hooks or signing (`--no-verify`, `--no-gpg-sign`, `--no-signoff`)
+- Reverting unrelated changes in the working tree
+
+## Destructive & Irreversible Operations
+
+Run these only when the user clearly asks. State the blast radius first and wait
+for confirmation:
+
+- `git reset --hard`, `git checkout -- <path>`, `git restore --`
+- `git push --force`, `git push --force-with-lease`
+- Branch deletion (`git branch -D`, deleting a remote branch)
+- Amending or rebasing published commits
+- `git clean -f`
+
 ## Commit Message Format
 
 ```

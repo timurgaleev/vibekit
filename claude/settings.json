@@ -2,7 +2,8 @@
   "cleanupPeriodDays": 3650,
   "env": {
     "MAX_THINKING_TOKENS": "31999",
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "ENABLE_TOOL_SEARCH": "1"
   },
   "permissions": {
     "allow": [
@@ -18,6 +19,8 @@
     "deny": [
       "Bash(chmod -R 777 /:*)",
       "Bash(chown -R * /:*)",
+      "Bash(curl * | bash:*)",
+      "Bash(curl * | sh:*)",
       "Bash(dd if=/dev/zero:*)",
       "Bash(fdisk:*)",
       "Bash(gdisk:*)",

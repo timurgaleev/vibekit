@@ -2,7 +2,10 @@
 
 ## Mandatory Security Checks
 
-Before ANY commit:
+Run this checklist on changes that touch a security-relevant area —
+authentication, authorization, cryptography, external input, secret handling, or
+sensitive data. It is not a per-commit ritual for unrelated work.
+
 - [ ] No hardcoded secrets (API keys, passwords, tokens)
 - [ ] All user inputs validated
 - [ ] SQL injection prevention (parameterized queries)
@@ -25,6 +28,16 @@ if (!apiKey) {
   throw new Error('OPENAI_API_KEY not configured')
 }
 ```
+
+## Confirm Before Acting
+
+Report the blast radius and get confirmation before changing:
+
+- Authentication, session, or token handling
+- Authorization logic
+- Encryption, hashing, or signing
+- PII or payment data handling
+- Credentials for external systems
 
 ## Security Response Protocol
 
