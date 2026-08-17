@@ -7,6 +7,14 @@
 #   claude/ -> ~/.claude/
 #   kiro/   -> ~/.kiro/
 #   cursor/ -> ~/.cursor/
+#   codex/  -> ~/.codex/
+#
+# Each sync records the files it manages in ~/.local/state/vibekit/manifest_<target>
+# and prunes deployed files the repo has since dropped. Files absent from that
+# manifest were installed by the user and are never touched. Configuration the
+# target app rewrites at runtime (codex/config.toml, codex/rules/default.rules,
+# codex/hooks.json, kiro/agents/default.json) is merged key-by-key rather than
+# overwritten — see lib/sync.sh.
 #
 # Usage:
 #   ./install.sh          # Deploy all changes (default)
@@ -77,6 +85,7 @@ DEPLOY_TARGETS=(
   "claude:${HOME}/.claude"
   "kiro:${HOME}/.kiro"
   "cursor:${HOME}/.cursor"
+  "codex:${HOME}/.codex"
 )
 
 PREVIEW_ONLY=false
@@ -97,10 +106,41 @@ RTK=${RTK:-true}               # Set to false or use -R flag to skip RTK install
 RTK_INSTALL_URL=${RTK_INSTALL_URL:-https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh}
 RTK_VERSION=${RTK_VERSION:-}    # Empty = latest release; set e.g. v0.43.0 to pin
 
+# Files co-owned with the target app: the repo contributes some entries, the app
+# writes the rest at runtime. Declared statically as target:relpath:strategy.
+#
+# This list is the single source for two things — which merge strategy a file
+# gets, and which paths prune must never delete. Deriving the protected set from
+# the files actually present in the repo would drop protection at exactly the
+# moment it is needed: the release that stops shipping one of these.
+MERGE_MANAGED=(
+  "codex:config.toml:toml"
+  "codex:hooks.json:json"
+  "codex:rules/default.rules:block"
+  "kiro:agents/default.json:json"
+)
+
+# merge_strategy_for <target> <relpath> — echoes the strategy, or nothing.
+merge_strategy_for() {
+  local entry
+  for entry in "${MERGE_MANAGED[@]}"; do
+    if [[ "${entry%%:*}" == "$1" && "$(echo "$entry" | cut -d: -f2)" == "$2" ]]; then
+      printf '%s' "${entry##*:}"
+      return 0
+    fi
+  done
+}
+
+# Codex rewrites ~/.codex/rules/default.rules whenever the user approves a
+# command prefix, so only the region between these markers is repo-managed.
+CODEX_RULES_BEGIN="# BEGIN vibekit managed codex rules"
+CODEX_RULES_END="# END vibekit managed codex rules"
+
 # Counters
 ADDED=0
 CHANGED=0
 SKIPPED=0
+PRUNED=0
 
 # Colors
 GREEN='\033[0;32m'
@@ -124,6 +164,27 @@ file_hash() {
 
 is_bin() {
   file "$1" | grep -qv "text"
+}
+
+# Defined here rather than taken from lib/sync.sh because the first thing it
+# guards is the clone that makes that lib available. sync.sh keeps this copy.
+retry() {
+  local description="$1"
+  shift
+  local max_retries=3 attempt=0 wait_time=5
+
+  while [[ $attempt -lt $max_retries ]]; do
+    if "$@"; then
+      return 0
+    fi
+    attempt=$((attempt + 1))
+    if [[ $attempt -eq $max_retries ]]; then
+      return 1
+    fi
+    msg_warn "$description failed — retrying in ${wait_time}s (attempt $attempt/$max_retries)"
+    sleep "$wait_time"
+    wait_time=$((wait_time * 2))
+  done
 }
 
 deploy_file() {
@@ -233,12 +294,57 @@ echo -e "\n${CYAN}> Fetching repository...${NC}"
 
 if [[ ! -d "$REPO_DIR" ]]; then
   msg_info "Cloning: $REPO_URL"
-  git clone "$REPO_URL" "$REPO_DIR"
+  if ! retry "Clone" git clone "$REPO_URL" "$REPO_DIR"; then
+    msg_warn "Failed to clone $REPO_URL after 3 attempts"
+    exit 1
+  fi
   msg_done "Cloned successfully"
 else
   msg_info "Updating: $REPO_DIR"
-  git -C "$REPO_DIR" pull
-  msg_done "Up to date"
+  # A failed pull is not fatal — the existing checkout is still deployable, and
+  # aborting would leave the machine stuck on whatever blocked the pull.
+  if retry "Pull" git -C "$REPO_DIR" pull; then
+    msg_done "Up to date"
+  else
+    # Falling back to the existing checkout is only safe if it is a clean
+    # snapshot. A conflicted merge leaves half-updated files, and deploying that
+    # would also drive prune from an incomplete file list.
+    # rev-parse --git-path resolves correctly for linked worktrees, where .git
+    # is a file rather than a directory. rebase-apply matters too: with the apply
+    # backend a resolved-but-uncontinued rebase leaves no unmerged index entries.
+    _in_progress=false
+    for _marker in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD rebase-merge rebase-apply; do
+      _p=$(git -C "$REPO_DIR" rev-parse --git-path "$_marker" 2>/dev/null) || continue
+      [[ -e "$REPO_DIR/$_p" || -e "$_p" ]] && _in_progress=true
+    done
+    # Compare against the literal "true": in a bare repository rev-parse prints
+    # "false" and still exits 0, so testing the exit status alone passes there.
+    if [[ "$(git -C "$REPO_DIR" rev-parse --is-inside-work-tree 2>/dev/null)" != "true" ]]; then
+      msg_warn "Pull failed and $REPO_DIR is not a valid git worktree — refusing to deploy it"
+      exit 1
+    fi
+    # Local modifications mean the checkout no longer matches any released
+    # commit. Deploying it would also drive prune from an edited file list.
+    # Capture status and exit code separately: a failing `git status` yields an
+    # empty string, which an emptiness test would read as "clean".
+    _status_out=$(git -C "$REPO_DIR" status --porcelain 2>/dev/null)
+    _status_rc=$?
+    if [[ "$_status_rc" -ne 0 ]]; then
+      msg_warn "Pull failed and \`git status\` errored in $REPO_DIR — refusing to deploy it"
+      exit 1
+    fi
+    if [[ -n "$_status_out" ]]; then
+      msg_warn "Pull failed and $REPO_DIR has local modifications — refusing to deploy it"
+      msg_info "Reset it (git -C $REPO_DIR reset --hard) and re-run"
+      exit 1
+    fi
+    if [[ -n "$(git -C "$REPO_DIR" ls-files --unmerged 2>/dev/null)" ]] || [[ "$_in_progress" == true ]]; then
+      msg_warn "Pull failed and $REPO_DIR has an unresolved merge — refusing to deploy a conflicted checkout"
+      msg_info "Resolve it (git -C $REPO_DIR merge --abort) and re-run"
+      exit 1
+    fi
+    msg_warn "Failed to update $REPO_DIR — deploying the existing checkout"
+  fi
 fi
 
 # Vibe Monitor lifecycle helpers (purge_vibemon) live in a sourceable lib. Source
@@ -251,6 +357,42 @@ if [[ -f "$REPO_DIR/lib/vibemon.sh" ]]; then
 else
   msg_warn "lib/vibemon.sh missing in $REPO_DIR — Vibe Monitor purge (-P) unavailable"
 fi
+
+# Sync helpers: manifest-based prune plus the fill-missing merges used for files
+# the target app rewrites at runtime. Without this lib the deploy still works,
+# it just stops pruning files the repo has dropped.
+SYNC_LIB_LOADED=false
+if [[ -f "$REPO_DIR/lib/sync.sh" ]]; then
+  source "$REPO_DIR/lib/sync.sh"
+  SYNC_LIB_LOADED=true
+else
+  msg_warn "lib/sync.sh missing in $REPO_DIR — prune and fill-missing merges unavailable"
+fi
+
+# One-time cleanup of files earlier versions deployed before manifests existed,
+# so a machine that never had a manifest still loses them. Without a manifest
+# there is no ownership record, so each entry pairs a path with the SHA-256 of
+# the exact bytes this repo shipped (recovered from the removal commit). Only a
+# byte-identical file is deleted: any local edit, however small, means the user
+# has taken it over.
+# NOTE: drop this block once every machine has synced past v1.6.0.
+LEGACY_FILES=(
+  # Replaced by rules/memex.md in v1.5.4 (commit 4f424a6).
+  "${HOME}/.claude/rules/obsidian.md|627b1a56232c9b58a5aa5476e6db40440ea73cdb496f40f7be87d103392efb98"
+  "${HOME}/.cursor/rules/obsidian.mdc|9cb8671e4c1b82341c7e1cea6212e2c5fd5875ec7cbd4a958b66ec34521567d3"
+)
+for entry in "${LEGACY_FILES[@]}"; do
+  legacy="${entry%%|*}"
+  want_hash="${entry#*|}"
+  [[ -f "$legacy" ]] || continue
+  got_hash=$(shasum -a 256 "$legacy" 2>/dev/null | awk '{print $1}')
+  if [[ "$got_hash" != "$want_hash" ]]; then
+    msg_warn "KEEPING ${legacy/#$HOME/\~} — differs from the version vibekit shipped; delete it yourself if unwanted"
+    continue
+  fi
+  msg_warn "REMOVE (legacy): ${legacy/#$HOME/\~}"
+  [[ "$PREVIEW_ONLY" == false ]] && rm -f "$legacy"
+done
 
 # Deploy each target
 for entry in "${DEPLOY_TARGETS[@]}"; do
@@ -270,11 +412,28 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
   fi
 
   # claude/settings.json is merged separately below to preserve user customizations
-  # (locally-enabled plugins, additions to permissions.allow, etc.).
-  find_excludes=("-not" "-path" "*/.git/*" "-not" "-name" "cli-config.json")
+  # (locally-enabled plugins, additions to permissions.allow, etc.), so it is
+  # also left out of the manifest and never pruned.
+  find_excludes=(
+    "-not" "-path" "*/.git/*"
+    "-not" "-path" "*/__pycache__/*"
+    "-not" "-name" "*.pyc"
+    "-not" "-name" "cli-config.json"
+  )
   if [[ "$src_subdir" == "claude" ]]; then
     find_excludes+=("-not" "-name" "settings.json")
   fi
+
+  # Records every file this run manages, deployed or already identical. The
+  # diff against the previous run is what prune acts on.
+  manifest_tmp="$(mktemp)"
+  # Paths this sync co-owns with the target app, taken from the static
+  # declaration rather than from what the repo currently ships — so prune keeps
+  # skipping them even after a release stops shipping one.
+  protected_tmp="$(mktemp)"
+  for entry in "${MERGE_MANAGED[@]}"; do
+    [[ "${entry%%:*}" == "$src_subdir" ]] && echo "$entry" | cut -d: -f2 >> "$protected_tmp"
+  done
 
   while IFS= read -r -d '' src_file; do
     rel_path="${src_file#$src_path/}"
@@ -285,9 +444,59 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
       if [[ "$(basename "$src_file")" == "vibenotif.py" ]]; then
         continue
       fi
-      if [[ "$rel_path" == "hooks.json" ]]; then
+      if [[ "$rel_path" == "hooks.json" && "$src_subdir" == "cursor" ]]; then
         continue
       fi
+    fi
+
+    # The manifest is newline-delimited; a filename containing a newline would
+    # split into entries that prune later matches against unrelated files.
+    if [[ "$rel_path" == *$'\n'* ]]; then
+      msg_warn "SKIP: filename contains a newline — $(printf '%q' "$rel_path")"
+      SKIPPED=$((SKIPPED + 1))
+      continue
+    fi
+
+    # Files the target app rewrites at runtime (Codex project trust and TUI
+    # state, Codex's accepted command prefixes, Kiro's agent hooks) are merged
+    # key-by-key instead of overwritten, so local state survives every sync.
+    merge_mode="$(merge_strategy_for "$src_subdir" "$rel_path")"
+
+    # Merge-managed files are co-owned: the repo contributes some keys, the app
+    # writes the rest. They are deliberately kept OUT of the manifest — if the
+    # repo ever stopped shipping one, pruning it would delete the user's runtime
+    # state along with our entries. Everything else is manifest-tracked and
+    # therefore prunable.
+    if [[ -z "$merge_mode" ]]; then
+      printf '%s\n' "$rel_path" >> "$manifest_tmp"
+    else
+      printf '%s\n' "$rel_path" >> "$protected_tmp"
+    fi
+
+    # Without the merge helpers a plain copy would wipe the runtime state these
+    # files hold, so skip them rather than overwrite.
+    if [[ -n "$merge_mode" && "$SYNC_LIB_LOADED" == false ]]; then
+      msg_warn "SKIP: $rel_path (needs lib/sync.sh to merge safely)"
+      SKIPPED=$((SKIPPED + 1))
+      continue
+    fi
+
+    if [[ -n "$merge_mode" ]]; then
+      rc=0
+      case "$merge_mode" in
+        toml)  toml_fill_missing "$src_file" "$dst_file" || rc=$? ;;
+        json)  json_fill_missing "$src_file" "$dst_file" || rc=$? ;;
+        block) sync_managed_block "$src_file" "$dst_file" \
+                 "$CODEX_RULES_BEGIN" "$CODEX_RULES_END" || rc=$? ;;
+      esac
+      case "$rc" in
+        0) SKIPPED=$((SKIPPED + 1)) ;;
+        1) msg_done "MERGE: $rel_path (added missing entries, kept local ones)"
+           CHANGED=$((CHANGED + 1)) ;;
+        2) msg_add  "NEW: $rel_path"
+           ADDED=$((ADDED + 1)) ;;
+      esac
+      continue
     fi
 
     if [[ ! -f "$dst_file" ]]; then
@@ -314,6 +523,18 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
       fi
     fi
   done < <(find "$src_path" -type f "${find_excludes[@]}" -print0 | sort -z)
+
+  # Prune files a previous sync deployed that the repo no longer ships. Files
+  # absent from the previous manifest were installed by the user and are left
+  # alone.
+  if [[ "$SYNC_LIB_LOADED" == true ]]; then
+    prune_target "$src_subdir" "$dst_dir" "$manifest_tmp" "$protected_tmp"
+    PRUNED=$((PRUNED + PRUNE_COUNT))
+    commit_manifest "$src_subdir" "$manifest_tmp"
+  else
+    rm -f "$manifest_tmp"
+  fi
+  rm -f "$protected_tmp"
 done
 
 # Claude settings.json: deep merge so user customizations survive sync.
@@ -681,5 +902,6 @@ echo
 msg_info "Results:"
 msg_add  "  New:       $ADDED"
 msg_done "  Updated:   $CHANGED"
+msg_warn "  Pruned:    $PRUNED"
 msg_info "  Unchanged: $SKIPPED"
 echo

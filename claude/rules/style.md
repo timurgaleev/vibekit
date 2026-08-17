@@ -1,5 +1,30 @@
 # Coding Style
 
+## Surgical Changes
+
+**Every changed line must trace directly back to the user's request.** Adjacent
+"improvements" inflate the diff, make review harder, and cause unintended
+regressions.
+
+### MUST NOT
+
+- "Improve" neighboring code, formatting, or comments along the way.
+- Refactor something that is not broken.
+- Change existing style to your own preference (quotes, indentation, line
+  breaks, import order).
+- Add type hints, docstrings, or comments that were not asked for.
+- Slip in a new abstraction, flag, setting, or option nobody requested.
+- Delete unrelated dead code — *mention* it and propose it as separate work.
+- Mix two purposes into one commit or PR.
+
+### MUST
+
+- Match the existing style, naming, and formatting exactly.
+- Clean up only the imports, variables, and functions *your own* change
+  orphaned.
+- State "behavior is unchanged" explicitly when the refactor is
+  behavior-preserving.
+
 ## Immutability (CRITICAL)
 
 ALWAYS create new objects, NEVER mutate:

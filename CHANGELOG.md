@@ -5,6 +5,129 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-08-17
+
+### Added
+- Codex CLI is now a deploy target: `codex/` → `~/.codex/`. Ships `AGENTS.md`
+  (self-contained global instructions, since Codex loads no `rules/` directory),
+  `config.toml`, `hooks.json`, and `rules/default.rules`.
+- Manifest-based prune. Each sync records the files it manages in
+  `~/.local/state/vibekit/manifest_<target>`; the next sync deletes deployed
+  files the repo has since dropped. Files absent from the manifest were installed by the
+  user and are never touched.
+- Fill-missing merges for configuration the target app rewrites at runtime:
+  `codex/config.toml` (TOML), `codex/hooks.json` and `kiro/agents/default.json`
+  (JSON), and `codex/rules/default.rules` (only the region between
+  `# BEGIN/END vibekit managed codex rules`). Local values always win; only
+  absent entries are added.
+- Exponential-backoff retry (5s → 10s → 20s, three attempts) around the repo
+  clone and pull. A failed pull now warns and deploys the existing checkout
+  instead of aborting the sync.
+- New always-on rules: `claude-code-usage` (plan mode, subagents, task tracking,
+  parallel tool calls, risky-action confirmation, context-window management),
+  `problem-solving` (think before coding, goal-driven execution, root cause
+  analysis), and `anti-patterns` (trap catalog plus a "Working If" self-check).
+  Cursor mirrors ship for the two tool-agnostic ones.
+- `ENABLE_TOOL_SEARCH` in `claude/settings.json`, and `curl … | sh` / `curl … |
+  bash` added to the Bash deny list.
+- `.mergify.yml` — auto-merge on one approving review, with branch cleanup.
+- `scripts/gen-codex-agents.py` generates `codex/AGENTS.md` from
+  `claude/CLAUDE.md` + `claude/rules/`. Claude Code loads the hub *and* the
+  rules directory so the hub can stay thin; Codex loads one file and has no
+  rules directory, so the generator inlines each rule body in place of its
+  pointer. A rule referenced from several sections is inlined once, at its first
+  mention. `--check` and `test/test_codex_agents.sh` fail the suite when the two
+  drift, when a `rules/*.md` link survives into the single-file document, when a
+  Claude-only tool name leaks in, when a new rule is added that nothing points
+  at, or when a rule filename falls outside the grammar the generator matches.
+  Parsing is fence-aware throughout, so a fenced example that quotes a
+  `rules/…` path keeps its literal text instead of being expanded.
+
+### Changed
+- `claude/CLAUDE.md` is now an index rather than a monolith. Each rule's body
+  lives in exactly one `rules/` file and the hub carries the summary plus a
+  pointer, removing the duplication that shipped the same text twice into every
+  session's context. Adds an Instruction Hierarchy (which source wins on
+  conflict) and a Priority list (which behavioral rule wins). `cursor/rules/core.mdc`
+  follows the same split.
+- `rules/style.md` gains the Surgical Changes MUST / MUST NOT checklist,
+  `rules/git.md` gains an explicit destructive-operations list, and
+  `rules/security.md` scopes its checklist to security-relevant changes instead
+  of every commit, plus a confirm-before-acting list.
+
+### Security
+- Merge-managed paths come from a static `MERGE_MANAGED` declaration that also
+  drives the merge strategy, instead of being collected from the files the repo
+  currently ships. Deriving the protected set from current contents dropped the
+  protection at exactly the moment it was needed — the release that stops
+  shipping one of those files.
+- The failed-pull fallback additionally requires a valid git worktree and a
+  clean tree. A non-git `$REPO_DIR`, or one with locally deleted source files,
+  previously passed the guard; the latter would make the manifest read those
+  files as removed and prune the deployed copies. The worktree check compares
+  against the literal `true` (a bare repository prints `false` and still exits
+  0) and the status check tests its exit code separately from its output (a
+  failing `git status` returns an empty string an emptiness test would read as
+  "clean").
+- `sync_managed_block` validates the source markers' *order*, not just their
+  count. One END followed by one BEGIN passed the count check while the
+  extractor emitted from BEGIN to EOF with no terminator. Regression test R9.
+- Merge-managed paths are passed to prune as an explicit protected list, not
+  merely omitted from the current manifest. Omission alone is not enough: a
+  manifest written before a file became merge-managed still names it, and prune
+  would read that as "dropped from the repo". Regression test R7.
+- The legacy cleanup matches the SHA-256 of the exact bytes vibekit shipped
+  (recovered from the removal commit), not a substring. A file edited by the
+  user — even lightly — is kept and reported.
+- The failed-pull guard also covers `rebase-apply`, `CHERRY_PICK_HEAD` and
+  `REVERT_HEAD`, and resolves each marker through `git rev-parse --git-path` so
+  it works in a linked worktree where `.git` is a file. With the apply rebase
+  backend a resolved-but-uncontinued rebase leaves no unmerged index entries,
+  so checking `ls-files --unmerged` alone missed it.
+- First-time creation of a merge-managed file goes through the atomic write
+  path too. It previously used a bare `cp` and reported success unconditionally,
+  so an interrupted copy could leave a partial config for the next sync to merge
+  into.
+- `sync_managed_block` validates the *source* markers as well. An END-only or
+  duplicated-marker source passed the extractor and would have replaced the
+  destination's managed region with nothing. Regression test R8.
+- Prune now resolves each candidate physically before deleting. A symlinked
+  directory component (a config directory linked into a dotfiles repo, say)
+  previously carried the delete outside the deploy target — the lexical `..`
+  check could not see it. Refused and reported instead. Regression test R1.
+- Merge-managed files (`codex/config.toml`, `codex/hooks.json`,
+  `codex/rules/default.rules`, `kiro/agents/default.json`) are no longer
+  recorded in the manifest, so prune can never delete them. They are co-owned
+  with the target app; dropping one from the repo would otherwise have taken the
+  user's runtime state with it.
+- The legacy cleanup verifies content before deleting. Each entry carries a
+  fingerprint from the version vibekit shipped, so a file the user wrote at the
+  same path is kept and reported rather than removed on the strength of its name.
+- Merges write through a temporary file and rename into place. A failing or
+  short write previously truncated the destination while the run reported
+  success. On failure the destination is left unchanged. Regression test R5.
+- `sync_managed_block` validates that the destination has exactly one correctly
+  ordered marker pair. A duplicated `BEGIN`, or an `END` before its `BEGIN`,
+  made the replacement pass swallow every line to EOF and delete rules the tool
+  itself had appended. Regression tests R3, R4.
+- A failed `git pull` no longer falls back to a checkout with unresolved merge
+  conflicts, which would have deployed half-updated files and driven prune from
+  an incomplete file list.
+- Filenames containing a newline are skipped rather than written to the
+  newline-delimited manifest, where they would have split into entries matching
+  unrelated files.
+
+### Fixed
+- `json_fill_missing` reported every unchanged file as updated and rewrote it on
+  each sync: it compared a hash of a command substitution (trailing newline
+  stripped) against a hash of the file (trailing newline present), so the two
+  never matched. Comparison is now byte-for-byte via `cmp`. Regression test R2.
+- Files removed from the repo stayed on disk forever. `~/.claude/rules/obsidian.md`
+  was dropped in v1.5.4 but kept loading into every session, contradicting the
+  memex rule that replaced it. Prune now handles this generally, and a one-time
+  cleanup removes that specific leftover on the next sync.
+- `.pyc` files and `__pycache__` directories are no longer deployed.
+
 ## [1.5.4] - 2026-07-27
 
 ### Changed

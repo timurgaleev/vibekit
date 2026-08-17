@@ -99,6 +99,40 @@ entirely, install with `-V` (removes the hooks) or omit the config file.
 The desktop app (`-M`, off by default) launches `npx vibemon@latest`, which
 fetches and runs an npm package. It is disabled unless you opt in.
 
+### File deletion during sync
+
+Since v1.6.0 `install.sh` deletes files, not just writes them. The scope is
+bounded on several sides:
+
+- Only paths recorded in the previous sync's manifest
+  (`~/.local/state/vibekit/manifest_<target>`) are eligible. Anything you
+  installed yourself was never recorded and is left alone.
+- Manifest entries that are absolute or contain `..` are rejected, so a
+  corrupted manifest cannot name a path outside the target.
+- Each candidate is additionally resolved **physically** before deletion: if a
+  symlinked directory component would land the delete outside the deploy
+  directory, it is refused and reported. A lexical path check alone does not
+  catch this.
+- Files that vibekit merges rather than owns (`codex/config.toml`,
+  `codex/hooks.json`, `codex/rules/default.rules`, `kiro/agents/default.json`)
+  are deliberately never recorded in the manifest, so they can never be pruned —
+  they hold runtime state the repo does not own.
+- Filenames containing a newline are skipped rather than recorded, since the
+  manifest is newline-delimited.
+
+Preview every deletion first with `./install.sh -n`.
+
+One cleanup is hard-coded rather than manifest-driven: a short list of files
+earlier versions shipped and later dropped, removed once so machines that never
+had a manifest also lose them. Because there is no ownership record for those,
+each entry carries a content fingerprint — a file at the same path whose content
+differs from the version vibekit shipped is kept and reported, not deleted.
+
+Merges are written through a temporary file in the destination directory and
+renamed into place, so an interrupted or failing write cannot leave a truncated
+config behind; on failure the destination is left unchanged and the run reports
+it.
+
 ## What is NOT in this repo
 
 - No secrets, tokens, or API keys are committed. Token references are

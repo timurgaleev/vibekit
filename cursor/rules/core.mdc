@@ -6,6 +6,33 @@ alwaysApply: true
 
 # Global Code Guidelines
 
+## Instruction Hierarchy
+
+When *sources* of instruction conflict, the one higher on this list wins:
+
+1. Platform and tool policy
+2. The user's direct instruction
+3. The current repository's local instructions and conventions
+4. These global rules
+
+Local instructions may specialize style, testing, and tooling. **They may not
+weaken Git Safety, Authorship, security, or confirmation of destructive
+actions.**
+
+## Priority
+
+A different axis from the hierarchy above — this ranks *behavioral rules* by how
+often they conflict in practice.
+
+1. **Git Safety** — never commit or push without permission (`git.mdc`)
+2. **Authorship** — no AI attribution anywhere (`authorship.mdc`)
+3. **Plan First** — agree on an approach before implementing
+4. **Language** — respond in English (`language.mdc`)
+5. **Project Conventions** — the repository's way wins
+6. **Surgical Changes** — touch only what the request requires (`style.mdc`)
+7. **Goal-Driven Execution** — start from a verifiable exit condition
+   (`problem-solving.mdc`)
+
 **Important: Refer to project-specific documentation (e.g., docs/, README.md) when available.**
 
 **Important: Before writing new code, search for similar existing code and maintain consistent patterns.**
@@ -25,6 +52,18 @@ alwaysApply: true
 - Locate definitions, references, call sites, related tests, and configs.
 - Do not change code without having read the entire file.
 - Record assumptions clearly.
+- **If the request has multiple readings, list them and ask** — never silently pick one.
+- **Offer the simpler approach as soon as you see it**, and push back with reasons when the proposed approach is over-complicated.
+- **Stop when confused** — name what is unclear and ask. "I'll ask if I get stuck partway" is not allowed.
+
+## Goal-Driven Execution
+
+Convert an imperative instruction into a verifiable exit condition before
+starting — "fix the bug" becomes "write a reproducing test, then make it pass".
+For multi-step work, state the verification per step. A step with no defined
+verification does not belong in the plan.
+
+Full rule: `problem-solving.mdc`
 
 ## Core Principles
 
@@ -36,28 +75,13 @@ alwaysApply: true
 - **Keep dependencies shallow**: Minimize tight coupling, maintain clear boundaries.
 - **Address root causes**: Fix the underlying issue, not symptoms.
 
-## Problem Solving & Root Cause Analysis
+## Problem Solving
 
-When troubleshooting issues, follow this systematic process:
+**Reproduce → Investigate → Root Cause → Fix → Verify.** Separate symptom from
+cause, ask "Why?" until you reach the underlying issue, and add a regression
+test after the fix.
 
-### Investigation Steps
-1. **Reproduce**: Document exact error messages, stack traces, and environment details
-2. **Investigate**:
-   - Read error messages carefully - they often contain the root cause
-   - Check logs for patterns, warnings, or errors leading up to failure
-   - Trace execution path from entry point to failure point
-   - Verify assumptions with minimal experiments
-3. **Root Cause**:
-   - Ask "Why?" 5 times until reaching the fundamental issue
-   - Distinguish symptoms from causes (e.g., "API returns 500" vs "connection pool exhausted")
-   - Look for systemic issues, not one-off failures
-4. **Fix**: Address root cause, not symptoms; document workarounds if necessary
-5. **Verify**: Test thoroughly, add regression tests, check for similar issues elsewhere
-
-### Example
-**Symptom**: Intermittent crashes in production
-**Bad**: Add error handling + auto-restart
-**Good**: Profile → identify memory leak (temp files not cleaned) → fix cleanup + add limits → verify with load test
+Full rule: `problem-solving.mdc`
 
 ## File Size Guidelines
 
@@ -96,16 +120,9 @@ When troubleshooting issues, follow this systematic process:
   - Explain your reasoning, but be open to better approaches
   - Mark conversations resolved only after addressing them
 
-## Anti-Patterns to Avoid
+## Anti-Patterns
 
-### Code Quality
-- Modifying code without reading the full context
-- Ignoring failures, warnings, or edge cases
-- Premature optimization or abstraction
-- Using broad exception handlers
+The catalog of traps, plus the "Working If" self-check to run against a diff
+before committing.
 
-### Problem Solving
-- Quick fixes without understanding the root cause
-- Treating symptoms (try-catch everywhere) instead of fixing causes
-- Stopping at the first plausible explanation
-- Skipping verification after implementing a fix
+Full rule: `anti-patterns.mdc`

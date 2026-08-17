@@ -28,7 +28,8 @@ yourself, more consistent results.
 
 **For engineers:** a versioned config repo of `CLAUDE.md`, behavior rules,
 sub-agents, status hooks, and a statusline that installs into `~/.claude`,
-`~/.cursor`, and `~/.kiro`. No telemetry, no lock-in — your config, in git.
+`~/.cursor`, `~/.kiro`, and `~/.codex`. No telemetry, no lock-in — your config,
+in git.
 
 ---
 
@@ -62,7 +63,11 @@ Each piece teaches the assistant one kind of habit:
 |-------|----------------------|
 | `CLAUDE.md` + `rules/` | Always-on guidelines: how to think, code, review, and which workflow to use |
 | `agents/` | Specialized helpers it can hand work to (planner, reviewer, debugger, …) |
+| `codex/AGENTS.md` | The same standards for the Codex CLI, in one self-contained file |
 | Status hooks + statusline | A live read on model, tokens, cost, context, and current stage |
+
+`CLAUDE.md` is an index, not a wall of text: it carries the summary and the
+priority order, and each rule's full body lives in exactly one `rules/` file.
 
 **The rules that shape behavior:**
 
@@ -78,6 +83,9 @@ Each piece teaches the assistant one kind of habit:
 | `memex` | Reads and saves cross-session context via the memex MCP server |
 | `authorship` | Comments, commits, and PRs in your voice — no AI attribution |
 | `skills` | Routes each task to the matching [vibestack](https://github.com/timurgaleev/vibestack) skill (`/ship`, `/plan-eng-review`, …) |
+| `problem-solving` | States assumptions, surfaces alternatives, works from a verifiable exit condition |
+| `anti-patterns` | Self-checks the diff before committing — nothing unrelated slips in |
+| `claude-code-usage` | Plans before implementing, delegates search, confirms risky actions |
 
 ---
 

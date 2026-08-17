@@ -88,6 +88,36 @@ python3 ~/.claude/hooks/vibenotif.py --lock-mode        # Show current lock mode
 python3 ~/.claude/hooks/vibenotif.py --reboot           # Reboot ESP32 device
 ```
 
+## Codex CLI
+
+`codex/` deploys to `~/.codex/`. Codex loads no `rules/` directory, so
+`AGENTS.md` has to be self-contained — every rule inlined, not pointed at. It is
+**generated** from `claude/CLAUDE.md` + `claude/rules/` by
+`scripts/gen-codex-agents.py`; edit those, not `AGENTS.md`. A project-root
+`AGENTS.md` still wins over it.
+
+Two files there are rewritten by Codex itself, so the sync merges instead of
+overwriting:
+
+| File | How it syncs |
+|------|--------------|
+| `config.toml` | Adds only tables and keys you do not already have. Project trust, TUI state, and any value you changed are preserved. |
+| `rules/default.rules` | Replaces only the region between `# BEGIN vibekit managed codex rules` and `# END …`. Prefix rules Codex appended when you approved a command live outside the markers and survive. |
+| `hooks.json` | Adds only missing keys. |
+
+`kiro/agents/default.json` uses the same add-only-missing merge.
+
+## Pruning removed files
+
+Every sync writes the list of files it manages to
+`~/.local/state/vibekit/manifest_<target>`. The next sync deletes anything that
+was in the previous manifest but is no longer in the repo — so a rule dropped upstream
+stops loading on your machine instead of lingering forever.
+
+Files that are not in the manifest were installed by you (hand-written skills,
+vendored packs) and are never touched. `./install.sh -n` lists what would be
+pruned without deleting anything.
+
 ## Cursor editor settings
 
 Cursor stores editor settings at an OS-specific path, so `install.sh` doesn't
