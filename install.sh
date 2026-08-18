@@ -13,8 +13,9 @@
 # and prunes deployed files the repo has since dropped. Files absent from that
 # manifest were installed by the user and are never touched. Configuration the
 # target app rewrites at runtime (codex/config.toml, codex/rules/default.rules,
-# codex/hooks.json, kiro/agents/default.json) is merged key-by-key rather than
-# overwritten — see lib/sync.sh.
+# codex/hooks.json, kiro/agents/default.json) — and claude/CLAUDE.md, which
+# third-party tools append to — is merged rather than overwritten; see
+# lib/sync.sh.
 #
 # Usage:
 #   ./install.sh          # Deploy all changes (default)
@@ -114,6 +115,7 @@ RTK_VERSION=${RTK_VERSION:-}    # Empty = latest release; set e.g. v0.43.0 to pi
 # the files actually present in the repo would drop protection at exactly the
 # moment it is needed: the release that stops shipping one of these.
 MERGE_MANAGED=(
+  "claude:CLAUDE.md:append"
   "codex:config.toml:toml"
   "codex:hooks.json:json"
   "codex:rules/default.rules:block"
@@ -130,6 +132,10 @@ merge_strategy_for() {
     fi
   done
 }
+
+# ~/.claude/CLAUDE.md is repo-managed down to this line; `rtk init` and anything
+# else that wants to be loaded appends below it, and stays there across syncs.
+CLAUDE_MD_END="<!-- END vibekit-managed CLAUDE.md — lines below are yours and survive every sync -->"
 
 # Codex rewrites ~/.codex/rules/default.rules whenever the user approves a
 # command prefix, so only the region between these markers is repo-managed.
@@ -457,9 +463,10 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
       continue
     fi
 
-    # Files the target app rewrites at runtime (Codex project trust and TUI
-    # state, Codex's accepted command prefixes, Kiro's agent hooks) are merged
-    # key-by-key instead of overwritten, so local state survives every sync.
+    # Files a second writer owns part of (Codex project trust and TUI state,
+    # Codex's accepted command prefixes, Kiro's agent hooks, the `@RTK.md` line
+    # `rtk init` appends to Claude's CLAUDE.md) are merged instead of
+    # overwritten, so that writer's state survives every sync.
     merge_mode="$(merge_strategy_for "$src_subdir" "$rel_path")"
 
     # Merge-managed files are co-owned: the repo contributes some keys, the app
@@ -488,6 +495,7 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
         json)  json_fill_missing "$src_file" "$dst_file" || rc=$? ;;
         block) sync_managed_block "$src_file" "$dst_file" \
                  "$CODEX_RULES_BEGIN" "$CODEX_RULES_END" || rc=$? ;;
+        append) sync_append_managed "$src_file" "$dst_file" "$CLAUDE_MD_END" || rc=$? ;;
       esac
       case "$rc" in
         0) SKIPPED=$((SKIPPED + 1)) ;;
