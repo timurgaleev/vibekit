@@ -12,6 +12,7 @@
 #   json_fill_missing   - add only keys the destination lacks (app-mutated JSON)
 #   toml_fill_missing   - same, for flat TOML (app-mutated config.toml)
 #   sync_managed_block  - replace only a BEGIN/END marked region of a text file
+#   sync_append_managed - repo-owned body + marker; foreign trailing lines kept
 #
 # Reads the global PREVIEW_ONLY (true => dry-run, print intent, change nothing).
 
@@ -448,6 +449,75 @@ sync_managed_block() {
     merged=$(printf '%s\n\n%s' "$(cat "$managed_file")" "$(cat "$dst")")
   fi
   rm -f "$managed_file"
+
+  commit_merge "$dst" "$merged"
+}
+
+# sync_append_managed <src> <dst> <end_marker>
+#
+# For a file the repo owns end to end but third parties append to: Claude Code's
+# ~/.claude/CLAUDE.md, where `rtk init` adds an `@RTK.md` line at the bottom. The
+# repo body is authoritative and is followed by <end_marker>; every line below
+# that marker belongs to whoever put it there and is carried across.
+#
+# The marker is written here rather than shipped in the source file, so the repo
+# copy stays clean for the generators that read it verbatim.
+#
+# A destination laid down before the marker existed is migrated only when it is
+# exactly the body we shipped plus a tail. Anything else is somebody's own file
+# and is left alone — refusing is what the old overwrite should have done.
+#
+# Returns 0 unchanged or refused, 1 updated, 2 created.
+sync_append_managed() {
+  local src="$1" dst="$2" marker="$3"
+
+  if grep -Fxq "$marker" "$src"; then
+    msg_warn "$(basename "$src") already carries the managed end marker — leaving $dst untouched"
+    return 0
+  fi
+
+  local created=false tail_lines=""
+  if [[ ! -f "$dst" ]]; then
+    created=true
+  else
+    local n_marker
+    n_marker=$(grep -Fxc "$marker" "$dst" || true)
+    if [[ "$n_marker" -gt 1 ]]; then
+      msg_warn "$dst has $n_marker end markers — leaving it untouched"
+      return 0
+    fi
+    if [[ "$n_marker" -eq 1 ]]; then
+      tail_lines=$(awk -v m="$marker" 'found { print } $0 == m { found = 1 }' "$dst")
+    else
+      # No marker yet: the only destination we may claim is one an older sync
+      # wrote, i.e. our body verbatim followed by whatever was appended to it.
+      local src_lines
+      src_lines=$(wc -l < "$src")
+      if ! head -n "$src_lines" "$dst" | cmp -s - "$src"; then
+        msg_warn "$dst has no vibekit end marker and does not match the copy we deployed — leaving it untouched"
+        msg_info "Move your own additions to the bottom of the file, or delete it to take the repo copy"
+        return 0
+      fi
+      tail_lines=$(tail -n "+$((src_lines + 1))" "$dst")
+    fi
+  fi
+
+  local merged
+  if [[ -n "$tail_lines" ]]; then
+    merged=$(printf '%s\n%s\n%s' "$(cat "$src")" "$marker" "$tail_lines")
+  else
+    merged=$(printf '%s\n%s' "$(cat "$src")" "$marker")
+  fi
+
+  if [[ "$created" == true ]]; then
+    [[ "$PREVIEW_ONLY" == true ]] && return 2
+    mkdir -p "$(dirname "$dst")" || { msg_warn "Could not create $(dirname "$dst")"; return 0; }
+    if ! printf '%s\n' "$merged" | write_atomic "$dst"; then
+      msg_warn "Failed to write $dst — not created"
+      return 0
+    fi
+    return 2
+  fi
 
   commit_merge "$dst" "$merged"
 }

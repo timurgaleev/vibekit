@@ -5,6 +5,25 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.6.1 — 2026-08-18
+
+### Fixed
+
+- **`~/.claude/CLAUDE.md` no longer loses lines other tools append to it.**
+  `rtk init` adds an `@RTK.md` line at the bottom of that file, and install.sh
+  deployed it by overwrite — so the next sync silently deleted the line and RTK
+  stopped loading. The file joins `MERGE_MANAGED` with a new `append` strategy:
+  the repo body is authoritative and ends at a marker, and everything below the
+  marker belongs to whoever wrote it and survives every sync.
+
+  A destination written before the marker existed is migrated only when it is
+  exactly the body we deployed plus a tail. Anything else is somebody's own file
+  and is left untouched with a warning — refusing is what the overwrite should
+  have done in the first place.
+
+  21 regression assertions cover migration, update, refusal, creation and
+  idempotency; the suite fails against the old install.sh.
+
 ## [1.6.0] - 2026-08-17
 
 ### Added
