@@ -5,6 +5,55 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.7.0 — 2026-09-02
+
+### Removed
+
+- **VibeNotif and VibeMon are gone.** The status broadcaster
+  (`hooks/vibenotif.py` in the Claude, Cursor and Kiro targets) and the Electron
+  desktop app it fed are no longer part of vibekit. The repo now ships no hooks
+  at all: the `hooks` map is out of `claude/settings.json`, `cursor/hooks.json`
+  ships empty, and `kiro/agents/default.json` no longer registers any.
+- Install flags `-V`, `-M` and `-P` and the environment variables `VIBENOTIF`,
+  `VIBEMON` and `VIBEMON_PURGE`, along with `lib/vibemon.sh` and the
+  `auto_launch` patcher that rewrote `~/.vibenotif/config.json` on every sync.
+
+### Changed
+
+- `cursor/hooks.json` joined `MERGE_MANAGED`. It is co-owned — Cursor and other
+  tools write their own hooks into it — so it must never be pruned or
+  overwritten wholesale. Without this, dropping our entries from the repo would
+  have deleted the installed file along with everybody else's hooks.
+- `claude/statusline.py` no longer reads `~/.vibenotif/config.json`, no longer
+  writes the project cache that only the broadcaster consumed, and keeps its
+  token-window state in `~/.claude/statusline/`. Two environment variables
+  replace the old config keys: `CLAUDE_TOKEN_RESET_HOURS` and
+  `CLAUDE_STATUSLINE_STATE_DIR`.
+
+### Added
+
+- `scripts/purge-vibenotif.sh` removes both products from a machine that already
+  has them. Sync alone cannot: it prunes files, but hook *entries* in
+  `~/.claude/settings.json`, `~/.cursor/hooks.json` and
+  `~/.kiro/agents/default.json` are merged, never deleted.
+
+  ```bash
+  bash scripts/purge-vibenotif.sh          # show what would happen
+  APPLY=1 bash scripts/purge-vibenotif.sh  # apply
+  ```
+
+  It matches only hooks whose command names `vibenotif.py` or `vibemon.py`, so
+  every foreign hook in the same file survives. Backups land in
+  `~/.vibekit-purge-backup-<timestamp>`. If a config cannot be parsed it stops
+  before deleting anything. `test/test_purge_vibenotif.sh` covers all three
+  config shapes, foreign-hook preservation, malformed JSON, dry-run and reruns.
+
+  If your `~/.vibenotif/config.json` held a `vibenotif_token`, revoke it at the
+  service — deleting the file does not.
+
+- `.github/workflows/test.yml` runs `test/run.sh` on every pull request. The
+  suites existed and none of them ran in CI.
+
 ## 1.6.1 — 2026-08-18
 
 ### Fixed

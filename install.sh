@@ -20,18 +20,12 @@
 # Usage:
 #   ./install.sh          # Deploy all changes (default)
 #   ./install.sh -n       # Preview mode (show changes, no writes)
-#   ./install.sh -V       # Disable VibeNotif (skip vibenotif.py and hooks)
-#   ./install.sh -M       # Enable Vibe Monitor desktop app auto-launch
-#   ./install.sh -P       # Purge Vibe Monitor (kill process, remove cache + data)
 #   ./install.sh -C       # Install the Caveman token-compression skill
 #   ./install.sh -Y       # Install the Ponytail minimal-code plugin
 #   ./install.sh -R       # Skip RTK (Rust Token Killer; installed by default)
 #   ./install.sh -h       # Show help
 #
 # Environment variables:
-#   VIBENOTIF=false ./install.sh   # Same as -V flag
-#   VIBEMON=true ./install.sh      # Same as -M flag
-#   VIBEMON_PURGE=true ./install.sh # Same as -P flag
 #   CAVEMAN=true ./install.sh      # Same as -C flag
 #   CAVEMAN_INSTALL_URL=<url> ./install.sh   # Override Caveman installer source
 #   PONYTAIL=true ./install.sh     # Same as -Y flag
@@ -40,21 +34,6 @@
 #   RTK_VERSION=v0.43.0 ./install.sh         # Pin a specific RTK release (default: latest)
 #   RTK_INSTALL_URL=<url> ./install.sh       # Override RTK installer source
 #   RTK_INSTALL_DIR=<dir> ./install.sh       # Install dir (passed to RTK; default ~/.local/bin)
-#
-# Vibe Monitor (the Electron desktop app launched via `npx vibemon@latest`)
-# is disabled by default — the install script writes `auto_launch: false`
-# into ~/.vibenotif/config.json so it does not start with Claude sessions.
-# Pass -M (or VIBEMON=true) to opt in.
-#
-# Disabling only flips the config flag; it leaves any previously launched app
-# running, plus its npx cache (~/.npm/_npx/*/node_modules/vibemon), app data
-# (~/Library/Application Support/vibemon on macOS, ~/.config/vibemon on Linux),
-# and the LaunchAgent the app self-installs for persistence
-# (~/Library/LaunchAgents/com.vibemon.autostart.plist) — which relaunches it at
-# login and after every exit, so the flag alone does not make it stay gone.
-# Pass -P (or VIBEMON_PURGE=true) to boot out that LaunchAgent, kill the process,
-# and delete every artifact. -P implies disabled and honors -n (preview shows
-# what would go).
 #
 # Caveman (https://github.com/JuliusBrussee/caveman) is an optional Claude Code
 # skill that compresses agent output. It is disabled by default and self-updates
@@ -90,9 +69,6 @@ DEPLOY_TARGETS=(
 )
 
 PREVIEW_ONLY=false
-VIBENOTIF=${VIBENOTIF:-true}   # Set to false or use -V flag to skip VibeNotif hooks
-VIBEMON=${VIBEMON:-false}      # Set to true or use -M flag to enable vibemon auto-launch
-VIBEMON_PURGE=${VIBEMON_PURGE:-false}  # Set to true or use -P flag to remove vibemon entirely
 CAVEMAN=${CAVEMAN:-false}      # Set to true or use -C flag to install the Caveman skill
 # Pinned to a specific commit (not `main`) so enabling -C never silently runs
 # whatever lands upstream. Review the upstream diff before bumping this SHA.
@@ -118,6 +94,7 @@ MERGE_MANAGED=(
   "claude:CLAUDE.md:append"
   "codex:config.toml:toml"
   "codex:hooks.json:json"
+  "cursor:hooks.json:json"
   "codex:rules/default.rules:block"
   "kiro:agents/default.json:json"
 )
@@ -217,45 +194,31 @@ diff_preview() {
 
 
 # Parse arguments
-while getopts "nVMPCYRh" opt; do
+while getopts "nCYRh" opt; do
   case $opt in
     n) PREVIEW_ONLY=true ;;
-    V) VIBENOTIF=false ;;
-    M) VIBEMON=true ;;
-    P) VIBEMON_PURGE=true ;;
     C) CAVEMAN=true ;;
     Y) PONYTAIL=true ;;
     R) RTK=false ;;
     h)
-      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-Y] [-R] [-h]"
+      echo "Usage: $0 [-n] [-C] [-Y] [-R] [-h]"
       echo "  -n  Preview mode (no changes written)"
-      echo "  -V  Disable VibeNotif (skip vibenotif.py and hooks config)"
-      echo "  -M  Enable Vibe Monitor desktop app auto-launch (off by default)"
-      echo "  -P  Purge Vibe Monitor (LaunchAgent, process, npx cache + app data)"
       echo "  -C  Install the Caveman token-compression skill (off by default)"
       echo "  -Y  Install the Ponytail minimal-code plugin (off by default)"
       echo "  -R  Skip RTK install (Rust Token Killer; installed by default)"
       echo "  -h  Show this help"
       echo ""
-      echo "  VIBENOTIF=false $0    # Same as -V via env var"
-      echo "  VIBEMON=true $0       # Same as -M via env var"
-      echo "  VIBEMON_PURGE=true $0 # Same as -P via env var"
       echo "  CAVEMAN=true $0       # Same as -C via env var"
       echo "  PONYTAIL=true $0      # Same as -Y via env var"
       echo "  RTK=false $0          # Same as -R via env var"
       exit 0
       ;;
     *)
-      echo "Usage: $0 [-n] [-V] [-M] [-P] [-C] [-Y] [-R] [-h]"
+      echo "Usage: $0 [-n] [-C] [-Y] [-R] [-h]"
       exit 1
       ;;
   esac
 done
-
-# -P implies disabled: purge takes precedence over -M, and forces auto_launch off.
-if [[ "$VIBEMON_PURGE" == true ]]; then
-  VIBEMON=false
-fi
 
 echo -e "\n${CYAN}---------------------------------------------------------------${NC}"
 echo -e "${CYAN}                     AI-CONFIG DEPLOY                         ${NC}"
@@ -263,18 +226,6 @@ echo -e "${CYAN}---------------------------------------------------------------$
 
 if [[ "$PREVIEW_ONLY" == true ]]; then
   msg_warn "Preview mode: no files will be written"
-fi
-
-if [[ "$VIBENOTIF" == false ]]; then
-  msg_warn "VibeNotif disabled: skipping vibenotif.py and hooks config"
-fi
-
-if [[ "$VIBEMON_PURGE" == true ]]; then
-  msg_warn "Vibe Monitor: purge requested (-P) — process, cache, and data will be removed"
-elif [[ "$VIBEMON" == true ]]; then
-  msg_info "Vibe Monitor auto-launch: enabled (-M)"
-else
-  msg_info "Vibe Monitor auto-launch: disabled (default — pass -M to enable, -P to purge)"
 fi
 
 if [[ "$CAVEMAN" == true ]]; then
@@ -351,17 +302,6 @@ else
     fi
     msg_warn "Failed to update $REPO_DIR — deploying the existing checkout"
   fi
-fi
-
-# Vibe Monitor lifecycle helpers (purge_vibemon) live in a sourceable lib. Source
-# it from the repo we just cloned/pulled, not from this script's own directory:
-# the curl | bash one-liner has no local lib/, and ${BASH_SOURCE[0]} is empty in
-# that path. Sourcing from $REPO_DIR works for both the one-liner and a clone.
-# msg_* are already defined above, so the lib reuses these colored helpers.
-if [[ -f "$REPO_DIR/lib/vibemon.sh" ]]; then
-  source "$REPO_DIR/lib/vibemon.sh"
-else
-  msg_warn "lib/vibemon.sh missing in $REPO_DIR — Vibe Monitor purge (-P) unavailable"
 fi
 
 # Sync helpers: manifest-based prune plus the fill-missing merges used for files
@@ -444,16 +384,6 @@ for entry in "${DEPLOY_TARGETS[@]}"; do
   while IFS= read -r -d '' src_file; do
     rel_path="${src_file#$src_path/}"
     dst_file="$dst_dir/$rel_path"
-
-    # VibeNotif: skip deploying vibenotif.py and cursor hooks.json (removal handled below)
-    if [[ "$VIBENOTIF" == false ]]; then
-      if [[ "$(basename "$src_file")" == "vibenotif.py" ]]; then
-        continue
-      fi
-      if [[ "$rel_path" == "hooks.json" && "$src_subdir" == "cursor" ]]; then
-        continue
-      fi
-    fi
 
     # The manifest is newline-delimited; a filename containing a newline would
     # split into entries that prune later matches against unrelated files.
@@ -630,102 +560,22 @@ PYEOF
   fi
 fi
 
-# VibeNotif: remove installed files and strip hooks from settings when disabled
-if [[ "$VIBENOTIF" == false ]]; then
-  echo -e "\n${CYAN}> Disabling VibeNotif...${NC}"
-
-  VIBENOTIF_FILES=(
-    "${HOME}/.claude/hooks/vibenotif.py"
-    "${HOME}/.cursor/hooks/vibenotif.py"
-    "${HOME}/.kiro/hooks/vibenotif.py"
-    "${HOME}/.cursor/hooks.json"
-  )
-  for f in "${VIBENOTIF_FILES[@]}"; do
-    if [[ -f "$f" ]]; then
-      msg_warn "REMOVE: $f"
-      if [[ "$PREVIEW_ONLY" == false ]]; then
-        rm -f "$f"
-      fi
-    fi
-  done
-
-  # Strip hooks section from ~/.claude/settings.json
-  CLAUDE_SETTINGS="${HOME}/.claude/settings.json"
-  if [[ -f "$CLAUDE_SETTINGS" ]] && command -v python3 >/dev/null 2>&1; then
-    stripped=$(python3 - "$CLAUDE_SETTINGS" <<'PYEOF'
-import json, sys
-data = json.load(open(sys.argv[1]))
-data.pop("hooks", None)
-print(json.dumps(data, indent=2))
-PYEOF
-)
-    stripped_hash=$(echo "$stripped" | md5 -q 2>/dev/null || echo "$stripped" | md5sum | awk '{print $1}')
-    dst_hash=$(file_hash "$CLAUDE_SETTINGS")
-    if [[ "$stripped_hash" != "$dst_hash" ]]; then
-      msg_warn "STRIP hooks: ~/.claude/settings.json"
-      if [[ "$PREVIEW_ONLY" == false ]]; then
-        echo "$stripped" > "$CLAUDE_SETTINGS"
-      fi
-    else
-      msg_info "hooks already absent: ~/.claude/settings.json"
-    fi
+# Leftover VibeNotif hook registrations. Sync prunes the hook FILES, but hook
+# entries inside settings.json / hooks.json / agents/default.json are merged, not
+# deleted — so an upgraded machine can end up pointing at scripts that are gone.
+# Detect and report; removing them is the user's call, via scripts/purge-vibenotif.sh.
+STALE_HOOKS=()
+for f in "${HOME}/.claude/settings.json" "${HOME}/.cursor/hooks.json" "${HOME}/.kiro/agents/default.json"; do
+  [[ -f "$f" ]] || continue
+  if grep -q "vibenotif.py\|vibemon.py" "$f" 2>/dev/null; then
+    STALE_HOOKS+=("$f")
   fi
-fi
-
-# Vibe Monitor auto-launch: manage only the `auto_launch` key in ~/.vibenotif/config.json
-# so the Electron desktop app (`npx vibemon@latest`) does not start with every
-# Claude session unless the user explicitly opts in with -M.
-if [[ "$VIBENOTIF" == true ]] && command -v python3 >/dev/null 2>&1; then
-  VIBENOTIF_CONFIG="${HOME}/.vibenotif/config.json"
-  VIBEMON_DESIRED="$VIBEMON"
-
-  patched=$(VIBEMON_DESIRED="$VIBEMON_DESIRED" python3 - "$VIBENOTIF_CONFIG" <<'PYEOF'
-import json, os, sys
-path = sys.argv[1]
-desired = os.environ["VIBEMON_DESIRED"] == "true"
-data = {}
-if os.path.exists(path):
-    try:
-        with open(path) as f:
-            data = json.load(f)
-        if not isinstance(data, dict):
-            data = {}
-    except (json.JSONDecodeError, IOError):
-        data = {}
-data["auto_launch"] = desired
-print(json.dumps(data, indent=2))
-PYEOF
-)
-
-  if [[ ! -f "$VIBENOTIF_CONFIG" ]]; then
-    msg_add "NEW: ~/.vibenotif/config.json (auto_launch=${VIBEMON})"
-    if [[ "$PREVIEW_ONLY" == false ]]; then
-      mkdir -p "$(dirname "$VIBENOTIF_CONFIG")"
-      echo "$patched" > "$VIBENOTIF_CONFIG"
-    fi
-  else
-    patched_hash=$(echo "$patched" | md5 -q 2>/dev/null || echo "$patched" | md5sum | awk '{print $1}')
-    dst_hash=$(file_hash "$VIBENOTIF_CONFIG")
-    if [[ "$patched_hash" != "$dst_hash" ]]; then
-      msg_done "UPDATE: ~/.vibenotif/config.json (auto_launch=${VIBEMON})"
-      if [[ "$PREVIEW_ONLY" == false ]]; then
-        echo "$patched" > "$VIBENOTIF_CONFIG"
-      fi
-    else
-      msg_info "auto_launch already ${VIBEMON}: ~/.vibenotif/config.json"
-    fi
-  fi
-fi
-
-# Vibe Monitor purge: boot out the self-installed LaunchAgent and remove the
-# process plus on-disk artifacts a prior launch left behind (runs after
-# auto_launch is set false above). Independent of VIBENOTIF so it works with -V.
-if [[ "$VIBEMON_PURGE" == true ]]; then
-  if declare -F purge_vibemon >/dev/null 2>&1; then
-    purge_vibemon
-  else
-    msg_warn "Purge requested but lib/vibemon.sh was not loaded — skipping"
-  fi
+done
+if [[ ${#STALE_HOOKS[@]} -gt 0 ]]; then
+  msg_warn "Stale VibeNotif hook entries found in: ${STALE_HOOKS[*]}"
+  msg_warn "They point at scripts this release removed. Clean them up with:"
+  msg_warn "  bash \$REPO_DIR/scripts/purge-vibenotif.sh          # preview"
+  msg_warn "  APPLY=1 bash \$REPO_DIR/scripts/purge-vibenotif.sh  # apply"
 fi
 
 # Cursor cli-config.json: merge only non-personal keys (permissions, approvalMode)

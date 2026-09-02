@@ -88,17 +88,6 @@ idempotent — if `rtk` is already on `PATH` the download is skipped.
 - If the installer or `rtk init` fails, the step warns and skips without
   aborting the sync.
 
-### VibeNotif / Vibe Monitor network egress
-
-The status hooks (`hooks/vibenotif.py`) can POST session state to targets in
-`~/.vibenotif/config.json` (`http_urls`, `vibenotif_url`). Defaults point at
-`localhost`. Only `http`/`https` targets are accepted; the auth token is sent
-only to the configured cloud origin (`vibenotif_url`). To disable broadcasting
-entirely, install with `-V` (removes the hooks) or omit the config file.
-
-The desktop app (`-M`, off by default) launches `npx vibemon@latest`, which
-fetches and runs an npm package. It is disabled unless you opt in.
-
 ### File deletion during sync
 
 Since v1.6.0 `install.sh` deletes files, not just writes them. The scope is
@@ -113,8 +102,9 @@ bounded on several sides:
   symlinked directory component would land the delete outside the deploy
   directory, it is refused and reported. A lexical path check alone does not
   catch this.
-- Files that vibekit merges rather than owns (`codex/config.toml`,
-  `codex/hooks.json`, `codex/rules/default.rules`, `kiro/agents/default.json`)
+- Files that vibekit merges rather than owns (`claude/CLAUDE.md`,
+  `codex/config.toml`, `codex/hooks.json`, `cursor/hooks.json`,
+  `codex/rules/default.rules`, `kiro/agents/default.json`)
   are deliberately never recorded in the manifest, so they can never be pruned —
   they hold runtime state the repo does not own.
 - Filenames containing a newline are skipped rather than recorded, since the

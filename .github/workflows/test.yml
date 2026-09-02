@@ -1,0 +1,21 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # test/run.sh covers the sync/merge/prune units, the purge script, and
+      # (via test_codex_agents.sh) the generated codex/AGENTS.md staleness check.
+      - name: Run test suite
+        run: bash test/run.sh
+      - name: Shell syntax
+        run: bash -n install.sh && bash -n scripts/purge-vibenotif.sh
