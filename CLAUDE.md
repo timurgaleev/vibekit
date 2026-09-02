@@ -9,11 +9,8 @@ AI-assisted development environment settings for Claude Code, Cursor CLI, and Ki
 ## Commands
 
 ```bash
-./install.sh          # Sync all changes (default; vibemon auto-launch OFF)
+./install.sh          # Sync all changes (default)
 ./install.sh -n       # Dry-run mode (show changes only)
-./install.sh -V       # Disable VibeNotif (skip vibenotif.py and hooks)
-./install.sh -M       # Enable Vibe Monitor desktop app auto-launch (opt-in)
-./install.sh -P       # Purge Vibe Monitor (LaunchAgent, process, cache, app data)
 ./install.sh -C       # Install the Caveman token-compression skill (opt-in)
 ./install.sh -Y       # Install the Ponytail minimal-code plugin (opt-in)
 ./install.sh -R       # Skip RTK (Rust Token Killer; installed by default)
@@ -126,9 +123,8 @@ never be pruned.
 | Component | Purpose |
 |-----------|---------|
 | `CLAUDE.md` | Global instructions — an index; each rule's body lives in one `rules/` file |
-| `settings.json` | Permissions, hooks, env, plugins |
+| `settings.json` | Permissions, env, plugins, statusline |
 | `agents/*.md` | Specialized sub-agents (planner, builder, debugger, etc.) |
-| `hooks/vibenotif.py` | VibeNotif status updates |
 | `rules/*.md` | Always-loaded guidelines (language, security, testing, …) |
 | `statusline.py` | Custom status line showing usage, cost, context, token reset timer |
 
@@ -144,25 +140,11 @@ Skills are not shipped here — `rules/skills.md` routes each task to the matchi
 | `hooks.json` | Hook wiring |
 | `rules/default.rules` | Command-approval prefix rules (managed block only) |
 
-### Hook Events
-
-| Event | Script | Purpose |
-|-------|--------|---------|
-| SessionStart | vibenotif.py | Initialize status |
-| UserPromptSubmit | vibenotif.py | Update to thinking state |
-| PreToolUse | vibenotif.py | Update to working state |
-| PreCompact | vibenotif.py | Update to compacting state |
-| Notification | vibenotif.py | Alert user for input |
-| SubagentStart | vibenotif.py | Update to working state |
-| SessionEnd | vibenotif.py | Done state |
-| Stop | vibenotif.py | Done state |
-
 ### Kiro Settings (`kiro/`)
 
 | Component | Purpose |
 |-----------|---------|
 | `agents/default.json` | Default agent configuration |
-| `hooks/vibenotif.py` | VibeNotif status updates |
 
 ## Testing Changes
 
