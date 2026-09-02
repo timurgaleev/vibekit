@@ -64,7 +64,7 @@ Each piece teaches the assistant one kind of habit:
 | `CLAUDE.md` + `rules/` | Always-on guidelines: how to think, code, review, and which workflow to use |
 | `agents/` | Specialized helpers it can hand work to (planner, reviewer, debugger, …) |
 | `codex/AGENTS.md` | The same standards for the Codex CLI, in one self-contained file |
-| Statusline | A live read on model, tokens, cost, context, and current stage |
+| Statusline | A live read on model, tokens, cost, context, and time to the next token reset |
 
 `CLAUDE.md` is an index, not a wall of text: it carries the summary and the
 priority order, and each rule's full body lives in exactly one `rules/` file.

@@ -5,6 +5,24 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.7.1 — 2026-09-02
+
+### Fixed
+
+- **Documentation caught up with what 1.7.0 actually shipped.**
+  `scripts/purge-vibenotif.sh` existed but was documented nowhere a user would
+  look — it now has a section in `docs/configuration.md` and a place in the
+  command list, including the note that an old `vibenotif_token` has to be
+  revoked at the service.
+- `cursor/hooks.json` became merge-managed in 1.7.0 but was missing from the
+  merge-vs-overwrite table, the one place that records which files prune must
+  never delete.
+- The testing section now names the CI workflow and the
+  `PURGE_SKIP_SYSTEM=1` guard that keeps the purge tests away from launchd and
+  the process table.
+- The README's statusline row still advertised the "current stage" readout,
+  which went out with the status hooks.
+
 ## 1.7.0 — 2026-09-02
 
 ### Removed
