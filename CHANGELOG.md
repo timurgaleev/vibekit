@@ -5,6 +5,24 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.8.0 — 2026-09-02
+
+### Added
+
+- **The plugin set and its marketplaces now sync.** `claude/settings.json`
+  declares Caveman and Ponytail alongside the official plugins, plus the two
+  marketplaces they come from. Before this, a machine only had them if someone
+  had added them there by hand, so a second machine silently ran a different
+  set. Declaring is not installing — `-C` and `-Y` stay opt-in and still fetch
+  the code; the settings entry records the decision and the source.
+- `tui: "fullscreen"` and `theme: "auto"` ship as defaults. They were
+  single-machine settings that never travelled.
+- `test/test_settings_merge.sh` covers the settings merge, which had no tests.
+  It extracts the merge program out of `install.sh` rather than copying it, so
+  the suite exercises the bytes users actually run. Twelve assertions: a
+  machine's own marketplace, plugin, allow entry, deny entry and unshipped keys
+  all survive a sync, and every repo-shipped key arrives.
+
 ## 1.7.1 — 2026-09-02
 
 ### Fixed

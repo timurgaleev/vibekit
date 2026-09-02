@@ -81,11 +81,27 @@ so local state survives — the helpers live in `lib/sync.sh`:
 
 | File | Strategy |
 |------|----------|
-| `claude/settings.json` | Deep merge, repo-authoritative for scalars; `permissions.*` arrays are unioned and `enabledPlugins` is deep-merged so user additions survive |
+| `claude/settings.json` | Deep merge, repo-authoritative for scalars; `permissions.*` arrays are unioned, and `enabledPlugins` + `extraKnownMarketplaces` are deep-merged so a machine's own plugins and marketplaces survive |
 | `codex/config.toml` | Add missing tables/keys only |
 | `codex/hooks.json`, `cursor/hooks.json`, `kiro/agents/default.json` | Add missing keys only |
 | `codex/rules/default.rules` | Replace only the `# BEGIN/END vibekit managed codex rules` block |
 | `cursor/cli-config.json` | Copy `permissions`, `approvalMode`, `version` only |
+
+### Plugins and marketplaces
+
+`claude/settings.json` declares the plugins and their marketplaces, so a fresh
+machine ends up with the same set instead of whatever was added by hand there.
+Caveman and Ponytail are declared alongside the official plugins.
+
+Declaring a plugin is not installing it. `-C` and `-Y` still run the upstream
+installers, and they stay opt-in — the settings entry only records the decision
+and where the plugin comes from. On a new machine, run `./install.sh -C -Y` if
+you want those two present.
+
+The merge is additive in both directions: a marketplace or plugin a machine
+added on its own is never dropped, and a repo entry is never overwritten by the
+machine. `test/test_settings_merge.sh` extracts the merge program out of
+`install.sh` and asserts both halves.
 
 ### Instruction sources: one hub, one generated mirror
 
@@ -165,6 +181,9 @@ Skills are not shipped here — `rules/skills.md` routes each task to the matchi
 3. Run `./install.sh -n` to preview changes (including what would be pruned)
 4. Run `./install.sh` to apply changes
 5. Test in a new Claude Code session
+
+Changes to `claude/settings.json` need a matching case in
+`test/test_settings_merge.sh` when they add a key whose merge behavior matters.
 
 `.github/workflows/test.yml` runs the same suite on every pull request, so a
 missing local run is caught before merge.
