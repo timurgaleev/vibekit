@@ -21,6 +21,27 @@ Two environment variables tune it:
 | `CLAUDE_TOKEN_RESET_HOURS` | `5` | Length of the token window; `0` disables the timer |
 | `CLAUDE_STATUSLINE_STATE_DIR` | `~/.claude/statusline` | Where the window-start timestamp is kept |
 
+## Removing VibeNotif and VibeMon (pre-1.7.0 machines)
+
+vibekit stopped shipping status hooks in v1.7.0. A machine configured before
+that still carries their registrations: sync prunes the hook *files*, but hook
+*entries* in `~/.claude/settings.json`, `~/.cursor/hooks.json` and
+`~/.kiro/agents/default.json` are merged rather than deleted.
+
+```bash
+bash scripts/purge-vibenotif.sh          # show what would change
+APPLY=1 bash scripts/purge-vibenotif.sh  # apply
+```
+
+It only removes hooks whose command names `vibenotif.py` or `vibemon.py`, so
+RTK, Caveman and anything else sharing those files survive. Backups land in
+`~/.vibekit-purge-backup-<timestamp>`. It also migrates the status line's
+token-window state out of `~/.vibenotif/` and, on macOS, removes the VibeMon
+LaunchAgent, npx cache and app data. Running it twice is a no-op.
+
+If your old `~/.vibenotif/config.json` held a `vibenotif_token`, revoke it at
+the service — deleting the file does not.
+
 ## Codex CLI
 
 `codex/` deploys to `~/.codex/`. Codex loads no `rules/` directory, so
