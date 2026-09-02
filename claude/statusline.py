@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
 Claude Code Statusline Hook
-Displays status line and sends context usage to VibeNotif
+Renders the terminal status line: model, project, git, context, cost.
 """
 
 from __future__ import annotations
 
-import fcntl
 import json
 import os
 import subprocess
@@ -20,46 +19,8 @@ from typing import Any
 # ============================================================================
 
 
-def load_config() -> None:
-    """Load configuration from config.json and set as environment variables."""
-    config_file = Path.home() / ".vibenotif" / "config.json"
-    if not config_file.exists():
-        return
-
-    try:
-        with open(config_file) as f:
-            config = json.load(f)
-    except (json.JSONDecodeError, IOError):
-        return
-
-    # Map config keys to environment variables
-    key_mapping = {
-        "debug": ("DEBUG", lambda v: "1" if v else "0"),
-        "cache_path": ("VIBENOTIF_CACHE_PATH", str),
-        "auto_launch": ("VIBENOTIF_AUTO_LAUNCH", lambda v: "1" if v else "0"),
-        "http_urls": (
-            "VIBENOTIF_HTTP_URLS",
-            lambda v: ",".join(v) if isinstance(v, list) else str(v),
-        ),
-        "serial_port": ("VIBENOTIF_SERIAL_PORT", str),
-        "vibenotif_url": ("VIBENOTIF_URL", str),
-        "vibenotif_token": ("VIBENOTIF_TOKEN", str),
-        "token_reset_hours": ("VIBENOTIF_TOKEN_RESET_HOURS", str),
-    }
-
-    for config_key, (env_key, converter) in key_mapping.items():
-        if config_key in config and config[config_key] is not None:
-            value = converter(config[config_key])
-            if value:
-                os.environ.setdefault(env_key, value)
-
-
-load_config()
-
-VIBE_MONITOR_MAX_PROJECTS = 10
-
 # Token reset window: 5h for Pro/Max, 0 to disable (Enterprise)
-TOKEN_RESET_HOURS = int(os.environ.get("VIBENOTIF_TOKEN_RESET_HOURS", "5") or "5")
+TOKEN_RESET_HOURS = int(os.environ.get("CLAUDE_TOKEN_RESET_HOURS", "5") or "5")
 TOKEN_RESET_MS = TOKEN_RESET_HOURS * 3600 * 1000
 
 # Lock file timeout constants
@@ -274,91 +235,6 @@ def get_context_usage(data: dict[str, Any]) -> str:
 
 
 # ============================================================================
-# VibeNotif Cache Functions
-# ============================================================================
-
-
-def get_cache_path() -> str:
-    """Get the cache file path."""
-    cache_path = os.environ.get(
-        "VIBENOTIF_CACHE_PATH", "~/.vibenotif/cache/statusline.json"
-    )
-    return os.path.expanduser(cache_path)
-
-
-def save_to_cache(project: str, model: str, memory: int) -> None:
-    """Save project metadata to cache file.
-
-    Uses fcntl for proper file locking to avoid race conditions.
-    """
-    if not project:
-        return
-
-    cache_path = get_cache_path()
-    cache_dir = os.path.dirname(cache_path)
-
-    # Ensure cache directory exists
-    os.makedirs(cache_dir, exist_ok=True)
-
-    lockfile = f"{cache_path}.lock"
-    timestamp = int(time.time())
-    lock_fd = None
-
-    try:
-        # Use fcntl for proper file locking (atomic, no race condition)
-        lock_fd = os.open(lockfile, os.O_CREAT | os.O_WRONLY, 0o644)
-
-        # Try to acquire lock with timeout
-        start_time = time.monotonic()
-        while True:
-            try:
-                fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                break  # Lock acquired
-            except (IOError, OSError):
-                if time.monotonic() - start_time > LOCK_TIMEOUT_SECONDS:
-                    return  # Timeout - skip cache update
-                time.sleep(LOCK_RETRY_INTERVAL)
-
-        # Read existing cache or create empty object
-        cache: dict[str, Any] = {}
-        if os.path.exists(cache_path):
-            try:
-                with open(cache_path) as f:
-                    cache = json.load(f)
-            except (json.JSONDecodeError, IOError):
-                cache = {}
-
-        # If new project and cache is full, remove oldest to make room
-        if project not in cache and len(cache) >= VIBE_MONITOR_MAX_PROJECTS:
-            # Sort by timestamp and remove oldest
-            sorted_items = sorted(
-                cache.items(),
-                key=lambda x: x[1].get("ts", 0) if isinstance(x[1], dict) else 0,
-                reverse=True,
-            )
-            cache = dict(sorted_items[: VIBE_MONITOR_MAX_PROJECTS - 1])
-
-        # Update cache with new project data
-        cache[project] = {"model": model, "memory": memory, "ts": timestamp}
-
-        # Atomic write: write to temp file, then rename
-        tmpfile = f"{cache_path}.tmp.{os.getpid()}"
-        with open(tmpfile, "w") as f:
-            json.dump(cache, f)
-        os.replace(tmpfile, cache_path)  # os.replace is atomic on POSIX
-
-    except (IOError, OSError):
-        pass
-    finally:
-        if lock_fd is not None:
-            try:
-                fcntl.flock(lock_fd, fcntl.LOCK_UN)
-                os.close(lock_fd)
-            except OSError:
-                pass
-
-
-# ============================================================================
 # ANSI Colors
 # ============================================================================
 
@@ -432,8 +308,8 @@ def format_cost(cost: float | str | None) -> str:
 
 def get_token_window_path() -> str:
     """Get the token window state file path."""
-    cache_dir = os.path.dirname(get_cache_path())
-    return os.path.join(cache_dir, "token_window.json")
+    state_dir = os.environ.get("CLAUDE_STATUSLINE_STATE_DIR", "~/.claude/statusline")
+    return os.path.join(os.path.expanduser(state_dir), "token_window.json")
 
 
 def load_window_start() -> float | None:
@@ -663,37 +539,6 @@ def build_statusline(
 
 
 # ============================================================================
-# Background Cache Save
-# ============================================================================
-
-
-def save_cache_background(project: str, model: str, memory: int) -> None:
-    """Save to cache in background process.
-
-    Uses fork on POSIX systems for efficiency, falls back to synchronous
-    save on Windows or if fork fails.
-    """
-    # Check if fork is available (not on Windows)
-    if not hasattr(os, "fork"):
-        save_to_cache(project, model, memory)
-        return
-
-    try:
-        pid = os.fork()
-        if pid == 0:
-            # Child process - save cache and exit
-            try:
-                save_to_cache(project, model, memory)
-            except Exception:
-                pass
-            os._exit(0)
-        # Parent process continues immediately
-    except OSError:
-        # Fork failed - save synchronously
-        save_to_cache(project, model, memory)
-
-
-# ============================================================================
 # Main
 # ============================================================================
 
@@ -755,10 +600,6 @@ def main() -> None:
     remaining_ms, reset_time_str = get_token_reset_info(duration)
     token_reset = format_token_reset(remaining_ms, reset_time_str)
 
-    # Save project metadata to cache in background
-    # Convert "85%" to 85, "" to 0
-    memory_int = int(context_usage.rstrip("%")) if context_usage else 0
-    save_cache_background(dir_name, model_display, memory_int)
 
     # Output statusline
     print(
