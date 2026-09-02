@@ -34,5 +34,5 @@ assert_present() {
 
 # Create an isolated fake HOME for one test; echoes the path.
 make_sandbox() {
-  mktemp -d "${TMPDIR:-/tmp}/vibemon-test.XXXXXX"
+  mktemp -d "${TMPDIR:-/tmp}/vibekit-test.XXXXXX"
 }
