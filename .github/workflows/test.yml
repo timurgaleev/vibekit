@@ -18,4 +18,4 @@ jobs:
       - name: Run test suite
         run: bash test/run.sh
       - name: Shell syntax
-        run: bash -n install.sh && bash -n scripts/purge-vibenotif.sh
+        run: bash -n install.sh

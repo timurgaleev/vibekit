@@ -560,24 +560,6 @@ PYEOF
   fi
 fi
 
-# Leftover VibeNotif hook registrations. Sync prunes the hook FILES, but hook
-# entries inside settings.json / hooks.json / agents/default.json are merged, not
-# deleted — so an upgraded machine can end up pointing at scripts that are gone.
-# Detect and report; removing them is the user's call, via scripts/purge-vibenotif.sh.
-STALE_HOOKS=()
-for f in "${HOME}/.claude/settings.json" "${HOME}/.cursor/hooks.json" "${HOME}/.kiro/agents/default.json"; do
-  [[ -f "$f" ]] || continue
-  if grep -q "vibenotif.py\|vibemon.py" "$f" 2>/dev/null; then
-    STALE_HOOKS+=("$f")
-  fi
-done
-if [[ ${#STALE_HOOKS[@]} -gt 0 ]]; then
-  msg_warn "Stale VibeNotif hook entries found in: ${STALE_HOOKS[*]}"
-  msg_warn "They point at scripts this release removed. Clean them up with:"
-  msg_warn "  bash \$REPO_DIR/scripts/purge-vibenotif.sh          # preview"
-  msg_warn "  APPLY=1 bash \$REPO_DIR/scripts/purge-vibenotif.sh  # apply"
-fi
-
 # Cursor cli-config.json: merge only non-personal keys (permissions, approvalMode)
 # to avoid overwriting personal data (authInfo, model, etc.)
 CURSOR_CLI_CONFIG_SRC="$REPO_DIR/cursor/cli-config.json"

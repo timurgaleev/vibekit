@@ -7,9 +7,9 @@
 # lib/ isn't even on disk before the repo is cloned. The fix sources from
 # $REPO_DIR (the just-cloned repo), after the clone/pull step.
 #
-# The bug was found through lib/vibemon.sh, which no longer exists. lib/sync.sh
+# The bug was first found through a lib/ file that no longer exists. lib/sync.sh
 # is sourced the same way and carries the same regression, so the guards moved
-# onto it rather than being deleted with the file that first exposed them.
+# onto it rather than being deleted alongside the file that exposed it.
 
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

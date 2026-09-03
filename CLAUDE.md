@@ -15,19 +15,7 @@ AI-assisted development environment settings for Claude Code, Cursor CLI, and Ki
 ./install.sh -Y       # Install the Ponytail minimal-code plugin (opt-in)
 ./install.sh -R       # Skip RTK (Rust Token Killer; installed by default)
 ./install.sh -h       # Show help
-
-bash scripts/purge-vibenotif.sh          # Preview the VibeNotif/VibeMon cleanup
-APPLY=1 bash scripts/purge-vibenotif.sh  # Apply it
 ```
-
-`scripts/purge-vibenotif.sh` removes VibeNotif and VibeMon from a machine that
-was configured before v1.7.0. Sync prunes the hook *files*, but hook *entries*
-inside `~/.claude/settings.json`, `~/.cursor/hooks.json` and
-`~/.kiro/agents/default.json` are merged rather than deleted, so an upgrade
-alone leaves registrations pointing at scripts that are gone. The script matches
-only hooks whose command names `vibenotif.py` or `vibemon.py`, backs up every
-file it edits, and is safe to run twice. `install.sh` detects leftover entries
-and points at it; it never deletes them itself.
 
 Caveman (`-C` / `CAVEMAN=true`) is opt-in and runs the upstream installer
 (`JuliusBrussee/caveman`) via `curl | bash`, **pinned to a specific commit SHA**
@@ -189,7 +177,4 @@ Changes to `claude/settings.json` need a matching case in
 missing local run is caught before merge.
 
 Changes to `lib/sync.sh` need a matching case in `test/test_sync.sh`. Its tests
-run against a fake `HOME`, so they never touch real config. Changes to
-`scripts/purge-vibenotif.sh` need one in `test/test_purge_vibenotif.sh`; set
-`PURGE_SKIP_SYSTEM=1` there so a test never reaches launchd or the process
-table.
+run against a fake `HOME`, so they never touch real config.

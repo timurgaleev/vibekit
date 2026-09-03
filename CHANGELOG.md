@@ -5,6 +5,26 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.9.0 — 2026-09-03
+
+### Removed
+
+- **The VibeNotif cleanup tooling.** `scripts/purge-vibenotif.sh`, its test
+  suite, and the installer check that looked for leftover hook registrations.
+  They existed to migrate machines configured before 1.7.0; that migration is
+  done, and carrying a destructive script for a product nobody runs is a
+  liability rather than a safety net. `git show v1.8.0:scripts/purge-vibenotif.sh`
+  recovers it if another machine ever turns up.
+- The 2026-09-02 design document for the removal. The CHANGELOG entries for
+  1.7.0 and 1.7.1 are the record.
+
+### Fixed
+
+- **Repository text is English again.** The cleanup script, its tests and that
+  design document had been written in Russian. Everything vibekit ships —
+  comments, script output, docs — is English, and three files had drifted off
+  that.
+
 ## 1.8.0 — 2026-09-02
 
 ### Added
