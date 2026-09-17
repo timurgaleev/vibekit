@@ -70,6 +70,27 @@ https://raw.githubusercontent.com/JuliusBrussee/caveman/25d22f864ad68cc447a4cb93
 Note: Caveman's own installer may self-update on later runs — review upstream
 before enabling it on sensitive machines.
 
+### deliberation plugin (`-D`, opt-in, off by default)
+
+`./install.sh -D` installs a third-party plugin
+([antonbabenko/deliberation](https://github.com/antonbabenko/deliberation))
+through the `claude plugin` CLI. Like Ponytail it tracks the marketplace repo's
+default branch — there is no commit-SHA pin, so review upstream before enabling
+it on a sensitive machine.
+
+- The flag installs the plugin and stops there. The plugin's `/deliberation:setup`
+  is what writes `~/.claude/rules/deliberation/` (~12k tokens loaded in every
+  session) and `~/.config/deliberation/config.json`; vibekit runs neither, and
+  never edits an existing config or turns on a paid provider.
+- **No key ever enters this repo.** The plugin's bridges read credentials from
+  the environment (`XAI_API_KEY`, `OPENROUTER_API_KEY`) or from a provider CLI's
+  own login. Export them from a shell profile that is not synced to cloud
+  storage, and rotate any key that has been pasted into a chat.
+- Once installed, the plugin can send the prompt — and, for providers that read
+  the repo, file contents — to OpenAI, Google, xAI or OpenRouter. Treat it as an
+  outbound channel and do not point it at a repository you may not share.
+- Override the marketplace source with `DELIBERATION_REPO=<owner/repo>`.
+
 ### RTK (on by default, skip with `-R`)
 
 `./install.sh` runs the third-party RTK installer
