@@ -13,6 +13,7 @@ AI-assisted development environment settings for Claude Code, Cursor CLI, and Ki
 ./install.sh -n       # Dry-run mode (show changes only)
 ./install.sh -C       # Install the Caveman token-compression skill (opt-in)
 ./install.sh -Y       # Install the Ponytail minimal-code plugin (opt-in)
+./install.sh -D       # Install the deliberation multi-model plugin (opt-in)
 ./install.sh -R       # Skip RTK (Rust Token Killer; installed by default)
 ./install.sh -h       # Show help
 ```
@@ -30,6 +31,16 @@ stdlib-first code. Override the source with `PONYTAIL_REPO`. Needs the `claude`
 CLI; if missing, the step warns and skips without aborting the sync. Unlike
 Caveman it tracks the marketplace repo's default branch (no commit-SHA pin).
 Restart Claude Code after install to load it.
+
+deliberation (`-D` / `DELIBERATION=true`) is opt-in and installs the
+`antonbabenko/deliberation` plugin from the `antonbabenko/agent-plugins`
+marketplace via the same `claude plugin` CLI path as Ponytail (override with
+`DELIBERATION_REPO`). It delegates a second opinion to GPT, Gemini, Grok or an
+OpenRouter model over MCP. The flag installs and nothing more: the plugin's own
+`/deliberation:setup` owns `~/.claude/rules/deliberation/` (~12k tokens loaded
+every session) and `~/.config/deliberation/config.json`, so vibekit never runs
+it, never edits that config, and never stores a provider key. Routing lives in
+`claude/rules/skills.md`. See `SECURITY.md`.
 
 RTK (`rtk-ai/rtk`, "Rust Token Killer") is **on by default** — it is a
 standalone Rust CLI that compresses shell-command output before it reaches the

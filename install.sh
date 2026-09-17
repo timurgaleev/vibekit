@@ -22,6 +22,7 @@
 #   ./install.sh -n       # Preview mode (show changes, no writes)
 #   ./install.sh -C       # Install the Caveman token-compression skill
 #   ./install.sh -Y       # Install the Ponytail minimal-code plugin
+#   ./install.sh -D       # Install the deliberation multi-model plugin
 #   ./install.sh -R       # Skip RTK (Rust Token Killer; installed by default)
 #   ./install.sh -h       # Show help
 #
@@ -30,6 +31,8 @@
 #   CAVEMAN_INSTALL_URL=<url> ./install.sh   # Override Caveman installer source
 #   PONYTAIL=true ./install.sh     # Same as -Y flag
 #   PONYTAIL_REPO=<owner/repo> ./install.sh  # Override Ponytail marketplace source
+#   DELIBERATION=true ./install.sh # Same as -D flag
+#   DELIBERATION_REPO=<owner/repo> ./install.sh  # Override deliberation marketplace source
 #   RTK=false ./install.sh         # Same as -R flag (skip RTK)
 #   RTK_VERSION=v0.43.0 ./install.sh         # Pin a specific RTK release (default: latest)
 #   RTK_INSTALL_URL=<url> ./install.sh       # Override RTK installer source
@@ -45,6 +48,16 @@
 # disabled by default; pass -Y (or PONYTAIL=true) to install it via the official
 # `claude plugin` CLI. Unlike Caveman, the plugin CLI tracks the marketplace
 # repo's default branch — there is no commit-SHA pin.
+#
+# deliberation (https://github.com/antonbabenko/deliberation) is an optional
+# Claude Code plugin that delegates a second opinion to GPT, Gemini, Grok or an
+# OpenRouter model over MCP. It is disabled by default; pass -D (or
+# DELIBERATION=true) to install it via the `claude plugin` CLI. The installer
+# only installs the plugin: the plugin's own `/deliberation:setup` writes its
+# rules into ~/.claude/rules/deliberation/ and its config into
+# ~/.config/deliberation/config.json, and vibekit never runs it, never touches
+# that config, and never stores a provider key. Those rules load in every
+# session and cost roughly 12k tokens, so setup stays a deliberate, manual step.
 #
 # RTK (https://github.com/rtk-ai/rtk), "Rust Token Killer", is a standalone CLI
 # that compresses shell-command output before it reaches the model. It installs
@@ -77,6 +90,9 @@ CAVEMAN_INSTALL_URL=${CAVEMAN_INSTALL_URL:-https://raw.githubusercontent.com/Jul
 PONYTAIL=${PONYTAIL:-false}    # Set to true or use -Y flag to install the Ponytail plugin
 PONYTAIL_REPO=${PONYTAIL_REPO:-DietrichGebert/ponytail}  # Marketplace source (owner/repo, URL, or path)
 PONYTAIL_PLUGIN=${PONYTAIL_PLUGIN:-ponytail@ponytail}     # plugin@marketplace identifier
+DELIBERATION=${DELIBERATION:-false}  # Set to true or use -D flag to install the deliberation plugin
+DELIBERATION_REPO=${DELIBERATION_REPO:-antonbabenko/agent-plugins}  # Marketplace source (owner/repo, URL, or path)
+DELIBERATION_PLUGIN=${DELIBERATION_PLUGIN:-deliberation@antonbabenko}  # plugin@marketplace identifier
 RTK=${RTK:-true}               # Set to false or use -R flag to skip RTK install
 # Tracks the latest tagged release; the installer verifies SHA-256 checksums.
 # Pin with RTK_VERSION=vX.Y.Z, or point RTK_INSTALL_URL at a fork/mirror/pinned ref.
@@ -194,27 +210,30 @@ diff_preview() {
 
 
 # Parse arguments
-while getopts "nCYRh" opt; do
+while getopts "nCYDRh" opt; do
   case $opt in
     n) PREVIEW_ONLY=true ;;
     C) CAVEMAN=true ;;
     Y) PONYTAIL=true ;;
+    D) DELIBERATION=true ;;
     R) RTK=false ;;
     h)
-      echo "Usage: $0 [-n] [-C] [-Y] [-R] [-h]"
+      echo "Usage: $0 [-n] [-C] [-Y] [-D] [-R] [-h]"
       echo "  -n  Preview mode (no changes written)"
       echo "  -C  Install the Caveman token-compression skill (off by default)"
       echo "  -Y  Install the Ponytail minimal-code plugin (off by default)"
+      echo "  -D  Install the deliberation multi-model plugin (off by default)"
       echo "  -R  Skip RTK install (Rust Token Killer; installed by default)"
       echo "  -h  Show this help"
       echo ""
       echo "  CAVEMAN=true $0       # Same as -C via env var"
       echo "  PONYTAIL=true $0      # Same as -Y via env var"
+      echo "  DELIBERATION=true $0  # Same as -D via env var"
       echo "  RTK=false $0          # Same as -R via env var"
       exit 0
       ;;
     *)
-      echo "Usage: $0 [-n] [-C] [-Y] [-R] [-h]"
+      echo "Usage: $0 [-n] [-C] [-Y] [-D] [-R] [-h]"
       exit 1
       ;;
   esac
@@ -238,6 +257,12 @@ if [[ "$PONYTAIL" == true ]]; then
   msg_info "Ponytail plugin: will install (-Y)"
 else
   msg_info "Ponytail plugin: skipped (default — pass -Y to install)"
+fi
+
+if [[ "$DELIBERATION" == true ]]; then
+  msg_info "deliberation plugin: will install (-D)"
+else
+  msg_info "deliberation plugin: skipped (default — pass -D to install)"
 fi
 
 if [[ "$RTK" == true ]]; then
@@ -675,6 +700,40 @@ if [[ "$PONYTAIL" == true ]]; then
       msg_done "Ponytail installed (restart Claude Code to load it)"
     else
       msg_warn "Ponytail install failed — skipping (sync continues)"
+    fi
+  fi
+fi
+
+# deliberation plugin: opt-in install via the official `claude plugin` CLI.
+# Off by default; enabled with -D or DELIBERATION=true. Needs the `claude` CLI —
+# if it is missing we warn and skip rather than aborting the whole sync.
+#
+# This installs the plugin and nothing else. The plugin's own
+# `/deliberation:setup` owns ~/.claude/rules/deliberation/ and
+# ~/.config/deliberation/config.json; running it from here would add ~12k tokens
+# of always-on rules and could enable a paid provider behind the user's back.
+if [[ "$DELIBERATION" == true ]]; then
+  echo -e "\n${CYAN}> Installing deliberation plugin...${NC}"
+
+  if ! command -v claude >/dev/null 2>&1; then
+    msg_warn "claude CLI not found — skipping deliberation"
+    msg_info "Install Claude Code, then re-run: $0 -D"
+  elif [[ "$PREVIEW_ONLY" == true ]]; then
+    msg_warn "Preview mode: would install deliberation plugin:"
+    msg_info "  claude plugin marketplace add $DELIBERATION_REPO"
+    msg_info "  claude plugin install $DELIBERATION_PLUGIN"
+  else
+    msg_info "Adding marketplace: $DELIBERATION_REPO"
+    if ! claude plugin marketplace add "$DELIBERATION_REPO" 2>/dev/null; then
+      msg_info "Marketplace already added (or could not be re-added)"
+    fi
+    if claude plugin install "$DELIBERATION_PLUGIN"; then
+      msg_done "deliberation installed (restart Claude Code to load it)"
+      msg_info "Configuration is a separate, manual step — run /deliberation:setup"
+      msg_info "  it installs ~12k tokens of rules loaded in every session"
+      msg_info "  providers need their own auth: codex login, agy, XAI_API_KEY, OPENROUTER_API_KEY"
+    else
+      msg_warn "deliberation install failed — skipping (sync continues)"
     fi
   fi
 fi

@@ -84,6 +84,26 @@ ponytail@ponytail`). Override the source with `PONYTAIL_REPO`. Requires the
 marketplace repo's default branch (no commit-SHA pin). Restart Claude Code after
 install to load it.
 
+## deliberation plugin (`-D`, opt-in)
+
+[deliberation](https://github.com/antonbabenko/deliberation) delegates a second
+opinion to GPT (via the Codex CLI), Gemini, Grok or an OpenRouter model over MCP,
+with seven expert personas and the `/deliberation:ask-all` and
+`/deliberation:consensus` commands. It is **not vendored** — `install.sh -D`
+installs it through the `claude plugin` CLI (`marketplace add
+antonbabenko/agent-plugins` + `install deliberation@antonbabenko`). Override the
+source with `DELIBERATION_REPO`. Requires the `claude` CLI; if missing, the step
+warns and skips.
+
+Installing is all the flag does. Configuration stays manual: run
+`/deliberation:setup` inside Claude Code when you want it. That command writes
+four rule files into `~/.claude/rules/deliberation/` — roughly 12k tokens loaded
+in **every** session — and seeds `~/.config/deliberation/config.json`. vibekit
+never runs it, never edits that config, and never stores a provider key; each
+provider reads its own credentials from the environment (`codex login`, the `agy`
+CLI for Gemini, `XAI_API_KEY`, `OPENROUTER_API_KEY`). Routing lives in
+`claude/rules/skills.md`. See [`SECURITY.md`](../SECURITY.md) for the trust model.
+
 ## RTK (`-R` to skip, on by default)
 
 [RTK](https://github.com/rtk-ai/rtk) ("Rust Token Killer") is a standalone Rust

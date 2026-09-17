@@ -83,6 +83,14 @@ check "d.get('theme') == 'auto'"                                   "S10: repo wi
 check "all(k in d['enabledPlugins'] for k in json.load(open('$SRC'))['enabledPlugins'])" \
                                                                    "S11: no repo plugin is dropped by the merge"
 
+# deliberation is declared here but installed only with `install.sh -D`, so the
+# declaration must arrive intact — plugin and marketplace together, or the
+# plugin resolves to a marketplace the machine has never heard of.
+check "d['enabledPlugins'].get('deliberation@antonbabenko') is True" \
+                                                                   "S12: deliberation plugin arrives enabled"
+check "d['extraKnownMarketplaces'].get('antonbabenko', {}).get('source', {}).get('repo') == 'antonbabenko/agent-plugins'" \
+                                                                   "S13: deliberation marketplace arrives with its source"
+
 echo "----"
 echo "PASS=$PASS FAIL=$FAIL"
 [[ "$FAIL" -eq 0 ]]

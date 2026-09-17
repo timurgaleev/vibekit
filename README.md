@@ -104,6 +104,6 @@ care about, preview first and read [`SECURITY.md`](SECURITY.md).
 
 ## More
 
-- [`docs/configuration.md`](docs/configuration.md) — statusline, env vars, Cursor settings, Caveman, Ponytail, RTK
+- [`docs/configuration.md`](docs/configuration.md) — statusline, env vars, Cursor settings, Caveman, Ponytail, deliberation, RTK
 - [`SECURITY.md`](SECURITY.md) — trust model and how to tighten defaults
 - [`CHANGELOG.md`](CHANGELOG.md) · [`LICENSE`](LICENSE) (MIT)

@@ -53,7 +53,8 @@
     "superpowers@claude-plugins-official": true,
     "telegram@claude-plugins-official": true,
     "caveman@caveman": true,
-    "ponytail@ponytail": true
+    "ponytail@ponytail": true,
+    "deliberation@antonbabenko": true
   },
   "tui": "fullscreen",
   "theme": "auto",
@@ -68,6 +69,12 @@
       "source": {
         "source": "github",
         "repo": "DietrichGebert/ponytail"
+      }
+    },
+    "antonbabenko": {
+      "source": {
+        "source": "github",
+        "repo": "antonbabenko/agent-plugins"
       }
     }
   }

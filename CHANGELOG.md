@@ -5,6 +5,37 @@ All notable changes to vibekit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.10.0 — 2026-09-17
+
+### Added
+
+- **The deliberation plugin, opt-in via `-D`.**
+  [antonbabenko/deliberation](https://github.com/antonbabenko/deliberation)
+  delegates a second opinion to GPT, Gemini, Grok or an OpenRouter model over
+  MCP. `install.sh -D` (or `DELIBERATION=true`) adds the
+  `antonbabenko/agent-plugins` marketplace and installs the plugin through the
+  `claude plugin` CLI, the same path Ponytail uses; `DELIBERATION_REPO`
+  overrides the source. A missing `claude` CLI warns and skips.
+- `claude/settings.json` declares the plugin and its marketplace, so every
+  machine ends up with the same set. Declaring is not installing — `-D` is still
+  what installs it.
+- A "second opinion from another model" section in `claude/rules/skills.md` and
+  the Cursor mirror: `/codex review` for a gated diff review,
+  `/deliberation:ask-all` for several models at once,
+  `/deliberation:consensus` for a contested decision, and an explicit rule not
+  to delegate twice when a vibestack skill already runs its own outside voice.
+- `test/test_deliberation.sh`, plus two cases in `test_settings_merge.sh` for the
+  new declaration.
+
+### Notes
+
+- The installer stops after installing the plugin. Configuration stays manual:
+  the plugin's own `/deliberation:setup` writes `~/.claude/rules/deliberation/`
+  (~12k tokens loaded in every session) and `~/.config/deliberation/config.json`.
+  vibekit runs neither, never edits an existing config, never enables a paid
+  provider, and never stores a provider key — each provider reads its
+  credentials from the environment.
+
 ## 1.9.0 — 2026-09-03
 
 ### Removed
