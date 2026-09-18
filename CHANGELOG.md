@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.11.0 — 2026-09-18
+
+### Changed
+
+- **This project is now part of
+  [vibestack](https://github.com/timurgaleev/vibestack), and this repository is
+  archived.** The configuration it shipped — `CLAUDE.md`, the behaviour rules,
+  the sub-agents, the statusline and the Cursor/Kiro/Codex payloads — installs
+  there from the same command as the skills: `./install --with-config`. Two
+  repositories meant two clones and two installers for one setup.
+- **The published one-liner keeps working.** `install.sh` is now a bootstrap: it
+  clones or updates vibestack and runs its installer with the configuration
+  phase on, forwarding every argument, so `-n`, `-C`, `-Y`, `-D` and `-R` behave
+  as they did. A URL redirect could not have done this — vibestack's installer
+  reads its payload from its own checkout.
+- **Existing installations upgrade in place.** The `vibekit-managed` marker in
+  `~/.claude/CLAUDE.md` and the manifests under `~/.local/state/vibekit/` were
+  deliberately left as they are: they identify state already written to every
+  installed machine, and renaming them would have orphaned it and duplicated the
+  managed blocks on the next sync.
+- CI is removed with the code it tested; the suites moved to vibestack as
+  `test/test-config-*.sh` and run there on both Linux and macOS.
+
+### Fixed
+
+Three ways this installer could destroy a configuration file, all found while
+moving it and all fixed in vibestack v1.39.0:
+
+- A JSON merge that could not parse its input printed nothing, and that nothing
+  was written — a malformed `~/.claude/settings.json` came back as a single
+  byte. Cursor's `cli-config.json`, which holds credentials, had the same shape.
+- The manifest that drives pruning was staged by unchecked commands, so a
+  failure produced an empty list and pruning read it as "the repository dropped
+  everything": measured at 48 of 50 deployed files deleted, with the run
+  reporting success.
+- The `config.toml` merge did not recognise a table header carrying a trailing
+  comment, so it appended a duplicate table and the file stopped parsing.
+
 All notable changes to vibekit are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

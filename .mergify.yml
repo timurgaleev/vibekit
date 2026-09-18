@@ -1,9 +1,0 @@
-pull_request_rules:
-  - name: automatic merge
-    conditions:
-      - base=main
-      - "#approved-reviews-by>=1"
-    actions:
-      merge:
-        method: merge
-      dismiss_reviews: {}
