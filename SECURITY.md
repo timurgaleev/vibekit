@@ -1,5 +1,7 @@
 # Security & Trust
 
+> **This project moved into [vibestack](https://github.com/timurgaleev/vibestack).** Report anything here against that repository — [`SECURITY.md`](https://github.com/timurgaleev/vibestack/blob/main/SECURITY.md) there is the maintained policy, and it covers the same payload and the same optional third-party installers.
+
 vibekit syncs configuration into `~/.claude/`, `~/.cursor/`, and `~/.kiro/` and
 can run optional helpers. This document explains what runs, what it can reach,
 and the trade-offs in the shipped defaults so you can make an informed choice

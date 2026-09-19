@@ -1,5 +1,7 @@
 # Configuration reference
 
+> **This project moved into [vibestack](https://github.com/timurgaleev/vibestack).** The page below is the last version that shipped from here and is no longer maintained; the current one is [`docs/configuration.md`](https://github.com/timurgaleev/vibestack/blob/main/docs/configuration.md) there, where `./install --with-config` deploys this configuration alongside the skills.
+
 Everything optional lives here. The defaults work out of the box — reach for
 this page only when you want to change something.
 
